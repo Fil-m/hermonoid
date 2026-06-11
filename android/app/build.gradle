@@ -1,5 +1,6 @@
 plugins {
-    id 'com.android.application' version '8.5.2'
+    id 'com.android.application'
+    id 'com.chaquo.python'
 }
 
 android {
@@ -11,7 +12,18 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName '1.0.0'
+        versionName '3.0.0'
+
+        python {
+            buildPython "/usr/bin/python3"
+            pip {
+                install "hermes-agent"
+            }
+        }
+
+        ndk {
+            abiFilters "arm64-v8a"
+        }
     }
 
     buildTypes {
@@ -23,6 +35,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 }
 

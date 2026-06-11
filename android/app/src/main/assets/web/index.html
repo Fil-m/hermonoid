@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hermes Chat</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --text: #eee;
+    --text2: #aaa;
+    --user-bg: #0f3460;
+    --hermes-bg: #1a3a5c;
+    --border: #2a2a4a;
+    --sidebar-w: 280px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    overflow: hidden;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 20;
+    transition: transform 0.25s ease;
+  }
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-header h3 { font-size: 16px; flex: 1; }
+  .sidebar-header .new-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .sidebar-list::-webkit-scrollbar { width: 3px; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  .session-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 4px;
+  }
+  .session-item:hover { background: var(--surface2); }
+  .session-item.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+  .session-item .s-title {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .session-item .s-meta {
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  /* ===== MAIN ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 48px;
+    z-index: 10;
+  }
+  .topbar .menu-btn {
+    display: none;
+    background: none; border: none; color: var(--text2);
+    font-size: 20px; cursor: pointer; padding: 4px;
+  }
+  .topbar h2 {
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar .model-badge {
+    font-size: 10px;
+    background: var(--surface2);
+    padding: 3px 8px;
+    border-radius: 10px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .topbar .icon-btn {
+    background: none; border: none; color: var(--text2);
+    font-size: 17px; cursor: pointer; padding: 6px;
+    border-radius: 8px; transition: all 0.2s;
+    line-height: 1; min-width: 30px; text-align: center;
+  }
+  .topbar .icon-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  .msg {
+    max-width: 88%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    line-height: 1.5;
+    font-size: 14px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.user { align-self: flex-end; background: var(--user-bg); border-bottom-right-radius: 4px; }
+  .msg.hermes { align-self: flex-start; background: var(--hermes-bg); border-bottom-left-radius: 4px; }
+  .msg.system { align-self: center; background: transparent; color: var(--text2); font-size: 12px; font-style: italic; max-width: 100%; text-align: center; padding: 6px 12px; }
+  .msg .label { font-size: 10px; font-weight: 600; margin-bottom: 3px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg .label.user-label { color: #64b5f6; }
+  .msg .label.hermes-label { color: #81c784; }
+
+  .msg pre { background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 8px; overflow-x: auto; font-size: 12px; margin: 6px 0; white-space: pre; }
+  .msg code { background: rgba(0,0,0,0.35); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+  .msg .media-attachment { margin-top: 6px; border-radius: 10px; overflow: hidden; max-width: 100%; }
+  .msg .media-attachment img { max-width: 100%; max-height: 250px; border-radius: 10px; display: block; cursor: pointer; }
+  .msg .media-attachment audio { width: 100%; border-radius: 8px; }
+
+  .typing {
+    align-self: flex-start;
+    color: var(--text2); font-size: 13px; padding: 8px 14px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .typing .dots { display: flex; gap: 3px; }
+  .typing .dot { width: 5px; height: 5px; background: var(--text2); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+  .typing .dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+  /* ===== INPUT ===== */
+  .input-container {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 10px 10px;
+    z-index: 10;
+  }
+  .tools-row {
+    display: flex; gap: 4px; padding: 0 0 6px;
+    overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+  }
+  .tools-row::-webkit-scrollbar { display: none; }
+  .tool-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); padding: 5px 10px; border-radius: 14px;
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tool-chip:hover { border-color: var(--accent); color: var(--text); }
+
+  .input-row { display: flex; align-items: flex-end; gap: 6px; }
+  .attach-btn {
+    background: none; border: none; color: var(--text2);
+    font-size: 20px; cursor: pointer; padding: 6px 4px; border-radius: 8px;
+    transition: all 0.2s; line-height: 1; flex-shrink: 0; min-width: 36px; text-align: center;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    z-index: 10; position: relative;
+  }
+  .attach-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .input-area {
+    flex: 1; display: flex; align-items: flex-end;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 4px 4px 14px; transition: border 0.2s;
+  }
+  .input-area:focus-within { border-color: var(--accent); }
+  .input-area textarea {
+    flex: 1; background: transparent; border: none;
+    padding: 8px 4px; color: var(--text); font-size: 14px;
+    font-family: inherit; resize: none; outline: none;
+    min-height: 22px; max-height: 100px; line-height: 1.4;
+  }
+  .input-area textarea::placeholder { color: var(--text2); }
+  .send-btn {
+    background: var(--accent); border: none; color: white;
+    width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, background 0.15s; flex-shrink: 0;
+  }
+  .send-btn:hover { transform: scale(1.08); background: #ff6b81; }
+  .send-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .attach-preview { display: none; align-items: center; gap: 8px; padding: 6px 4px 4px; font-size: 12px; color: var(--text2); }
+  .attach-preview.visible { display: flex; }
+  .attach-preview .preview-file { background: var(--surface2); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 6px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attach-preview .remove-attach { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 16px; padding: 2px; }
+
+  .attach-menu {
+    display: none; position: absolute; bottom: 100%; left: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 6px; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    z-index: 20; gap: 4px; flex-wrap: wrap; max-width: 260px;
+  }
+  .attach-menu.visible { display: flex; }
+  .attach-option {
+    background: var(--surface2); border: none; color: var(--text);
+    padding: 10px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s; flex: 1 0 45%; min-width: 100px;
+  }
+  .attach-option:hover { background: var(--accent); }
+
+  .recording-indicator { display: none; align-items: center; gap: 8px; padding: 4px 6px; font-size: 13px; color: var(--accent); }
+  .recording-indicator.visible { display: flex; }
+  .rec-pulse { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite; }
+  @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
+
+  .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 5; }
+  .overlay.visible { display: block; }
+
+  .img-viewer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .img-viewer.visible { display: flex; }
+  .img-viewer img { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+  .img-viewer .close-viewer { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+
+  .context-menu {
+    display: none; position: fixed; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px; z-index: 50; min-width: 140px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .context-menu.visible { display: block; }
+  .ctx-item {
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+    border-radius: 6px; transition: background 0.15s;
+  }
+  .ctx-item:hover { background: var(--surface2); }
+  .ctx-item.danger { color: var(--accent); }
+
+  @media(max-width: 767px) {
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .topbar .menu-btn { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>💬 Hermes</h3>
+    <button class="new-btn" onclick="newSession()" title="Новий чат">+</button>
+  </div>
+  <div class="sidebar-list" id="sessionList"></div>
+</div>
+
+<!-- Overlay for mobile sidebar -->
+<div class="overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h2 id="chatTitle">Hermes Chat</h2>
+    <span class="model-badge">deepseek</span>
+    <button class="icon-btn" onclick="renameCurrent()" title="Перейменувати">✏️</button>
+    <button class="icon-btn" onclick="exportChat()" title="Експорт">📥</button>
+    <button class="icon-btn" onclick="deleteCurrent()" title="Видалити">🗑</button>
+    <a href="/settings.html" class="icon-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center" title="Налаштування">⚙️</a>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="msg system">
+      🤖 <strong>Hermes Chat</strong> — обери сесію зліва або створи нову ➕
+    </div>
+  </div>
+
+  <div class="input-container" id="inputContainer">
+    <div class="tools-row">
+      <span class="tool-chip" onclick="insertText('виконай команду: ')">🖥 cmd</span>
+      <span class="tool-chip" onclick="insertText('прочитай файл ')">📖 read</span>
+      <span class="tool-chip" onclick="insertText('напиши Python: ')">🐍 py</span>
+      <span class="tool-chip" onclick="insertText('створи файл ')">✏️ write</span>
+      <span class="tool-chip" onclick="insertText('пошукай файли ')">🔍 find</span>
+      <span class="tool-chip" onclick="insertText('HTTP запит: ')">🌐 http</span>
+    </div>
+
+    <div class="recording-indicator" id="recordingIndicator">
+      <span class="rec-pulse"></span>
+      <span id="recordingTime">00:00</span>
+      <button class="remove-attach" onclick="stopRecording()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:18px;">✕</button>
+    </div>
+
+    <div class="attach-preview" id="attachPreview">
+      <span class="preview-file" id="attachName"></span>
+      <button class="remove-attach" onclick="removeAttachment()">✕</button>
+    </div>
+
+    <div class="input-row">
+      <button class="attach-btn" id="attachBtn">📎</button>
+      <div class="input-area">
+        <textarea id="msgInput" rows="1"
+          placeholder="Напиши повідомлення..."
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer -->
+<div class="img-viewer" id="imgViewer" onclick="this.classList.remove('visible')">
+  <button class="close-viewer" onclick="document.getElementById('imgViewer').classList.remove('visible')">✕</button>
+  <img id="viewerImage" src="" alt="full size">
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="renameCtx()">✏️ Перейменувати</div>
+  <div class="ctx-item danger" onclick="deleteCtx()">🗑 Видалити</div>
+</div>
+
+<script>
+const API = window.location.origin;
+let currentSessionId = null;
+let chatHistory = [];
+let attachedFile = null;
+let mediaRecorder = null;
+let recordingChunks = [];
+let recordingTimer = null;
+let recordingSec = 0;
+let isRecording = false;
+let ctxSessionId = null;
+
+// ====== СЕСІЇ ======
+
+async function loadSessions() {
+  try {
+    const resp = await fetch(API + '/api/sessions');
+    const data = await resp.json();
+    const list = document.getElementById('sessionList');
+    list.innerHTML = '';
+    for (const s of data.sessions) {
+      const div = document.createElement('div');
+      div.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+      div.setAttribute('data-id', s.id);
+
+      const ago = timeAgo(s.updated_at);
+      const msgs = s.msg_count || 0;
+
+      div.innerHTML = `
+        <div class="s-title">${escapeHtml(s.title)}</div>
+        <div class="s-meta">
+          <span>${msgs} повідомлень</span>
+          <span>•</span>
+          <span>${ago}</span>
+        </div>
+      `;
+
+      div.onclick = function(e) { switchSession(s.id); };
+      div.oncontextmenu = function(e) {
+        e.preventDefault();
+        showCtxMenu(e, s.id);
+      };
+
+      list.appendChild(div);
+    }
+  } catch (e) {
+    console.error('Failed to load sessions', e);
+  }
+}
+
+async function newSession() {
+  try {
+    const resp = await fetch(API + '/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Новий чат' })
+    });
+    const data = await resp.json();
+    currentSessionId = data.session_id;
+    chatHistory = [];
+    closeSidebar();
+    await switchSession(currentSessionId);
+  } catch (e) {
+    console.error('Failed to create session', e);
+  }
+}
+
+async function switchSession(sid) {
+  currentSessionId = sid;
+  document.getElementById('msgInput').focus();
+
+  // Highlight in sidebar
+  document.querySelectorAll('.session-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === sid);
+  });
+
+  closeSidebar();
+
+  try {
+    const resp = await fetch(API + '/api/sessions/' + sid);
+    const data = await resp.json();
+
+    document.getElementById('chatTitle').textContent = data.session.title || 'Чат';
+    chatHistory = [];
+
+    const area = document.getElementById('chatArea');
+    area.innerHTML = '';
+
+    if (data.messages.length === 0) {
+      area.innerHTML = '<div class="msg system">💬 Новий чат. Напиши щось!</div>';
+      return;
+    }
+
+    for (const msg of data.messages) {
+      addMessage(msg.role, msg.text, msg.media || null);
+      chatHistory.push({ role: msg.role, text: msg.text });
+    }
+  } catch (e) {
+    console.error('Failed to load session', e);
+  }
+}
+
+async function renameCurrent() {
+  const title = prompt('Нова назва чату:', document.getElementById('chatTitle').textContent);
+  if (!title || !currentSessionId) return;
+  try {
+    await fetch(API + '/api/sessions/' + currentSessionId + '/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title })
+    });
+    document.getElementById('chatTitle').textContent = title;
+    await loadSessions();
+  } catch (e) {
+    console.error('Failed to rename', e);
+  }
+}
+
+async function deleteCurrent() {
+  if (!currentSessionId) return;
+  if (!confirm('Видалити цю сесію?')) return;
+  try {
+    await fetch(API + '/api/sessions/' + currentSessionId, { method: 'DELETE' });
+    currentSessionId = null;
+    chatHistory = [];
+    document.getElementById('chatArea').innerHTML = '<div class="msg system">🤖 Сесію видалено. Обери іншу або створи нову ➕</div>';
+    document.getElementById('chatTitle').textContent = 'Hermes Chat';
+    await loadSessions();
+  } catch (e) {
+    console.error('Failed to delete', e);
+  }
+}
+
+function showCtxMenu(e, sid) {
+  ctxSessionId = sid;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('visible');
+}
+
+function renameCtx() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+  if (!ctxSessionId) return;
+  const title = prompt('Нова назва:');
+  if (!title) return;
+  fetch(API + '/api/sessions/' + ctxSessionId + '/rename', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: title })
+  }).then(() => loadSessions());
+}
+
+function deleteCtx() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+  if (!ctxSessionId) return;
+  if (!confirm('Видалити цю сесію?')) return;
+  fetch(API + '/api/sessions/' + ctxSessionId, { method: 'DELETE' })
+    .then(() => {
+      if (ctxSessionId === currentSessionId) {
+        currentSessionId = null;
+        document.getElementById('chatArea').innerHTML = '<div class="msg system">🤖 Сесію видалено</div>';
+        document.getElementById('chatTitle').textContent = 'Hermes Chat';
+      }
+      return loadSessions();
+    });
+}
+
+document.addEventListener('click', function() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+});
+
+// ====== ЧАТ ======
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function addMessage(role, text, media) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  const label = document.createElement('div');
+  label.className = 'label ' + (role === 'user' ? 'user-label' : role === 'hermes' ? 'hermes-label' : '');
+  if (role === 'user') label.textContent = 'Ти';
+  else if (role === 'hermes' || role === 'assistant') label.textContent = 'Hermes';
+  div.appendChild(label);
+
+  const content = document.createElement('div');
+  content.innerHTML = formatMessage(text);
+  div.appendChild(content);
+
+  if (media) {
+    const wrap = document.createElement('div');
+    wrap.className = 'media-attachment';
+    if (media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = media.data;
+      img.alt = media.name || 'img';
+      img.onclick = function() {
+        document.getElementById('viewerImage').src = this.src;
+        document.getElementById('imgViewer').classList.add('visible');
+      };
+      wrap.appendChild(img);
+    } else if (media.type === 'audio') {
+      const audio = document.createElement('audio');
+      audio.controls = true; audio.src = media.data;
+      wrap.appendChild(audio);
+    } else if (media.type === 'file') {
+      const link = document.createElement('div');
+      link.style.cssText = 'padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:8px;font-size:12px;';
+      link.textContent = '📎 ' + (media.name || 'файл');
+      wrap.appendChild(link);
+    }
+    div.appendChild(wrap);
+  }
+
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function formatMessage(text) {
+  if (!text) return '';
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function showTyping() {
+  const area = document.getElementById('chatArea');
+  if (document.getElementById('typingIndicator')) return;
+  const div = document.createElement('div');
+  div.className = 'typing'; div.id = 'typingIndicator';
+  div.innerHTML = '<span>Hermes</span><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function setWaiting(w) {
+  isWaiting = w;
+  document.getElementById('sendBtn').disabled = w;
+  document.getElementById('msgInput').disabled = w;
+}
+let isWaiting = false;
+
+async function sendMsg() {
+  if (isWaiting) return;
+
+  // Якщо нема сесії — створити
+  if (!currentSessionId) {
+    await newSession();
+    // Чекаємо поки створиться
+    if (!currentSessionId) return;
+  }
+
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text && !attachedFile) return;
+
+  input.value = ''; input.style.height = 'auto';
+  const media = attachedFile;
+  removeAttachment();
+  closeAttachMenu();
+
+  addMessage('user', text || '📎 медіа', media);
+  chatHistory.push({ role: 'user', text: text || '' });
+
+  showTyping(); setWaiting(true);
+
+  try {
+    const payload = {
+      message: text || '',
+      session_id: currentSessionId,
+      history: chatHistory.slice(-20)
+    };
+    if (media) {
+      payload.media = { type: media.type, name: media.name, mime: media.mime, data: media.data };
+    }
+
+    const resp = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    hideTyping();
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      addMessage('hermes', '❌ ' + err);
+      chatHistory.push({ role: 'assistant', text: '❌ ' + err });
+    } else {
+      const data = await resp.json();
+      addMessage('hermes', data.response || '...');
+      chatHistory.push({ role: 'assistant', text: data.response || '' });
+      // Оновити назву в сайдбарі
+      await loadSessions();
+      // Оновити заголовок
+      document.getElementById('chatTitle').textContent =
+        document.querySelector('.session-item.active .s-title')?.textContent || 'Hermes Chat';
+    }
+  } catch (e) {
+    hideTyping();
+    addMessage('hermes', '❌ Помилка: ' + e.message);
+    chatHistory.push({ role: 'assistant', text: '❌ ' + e.message });
+  }
+
+  setWaiting(false);
+  input.focus();
+}
+
+function insertText(text) {
+  const input = document.getElementById('msgInput');
+  input.value = text;
+  input.focus(); autoResize(input);
+  input.setSelectionRange(text.length, text.length);
+}
+
+// ====== ВКЛАДЕННЯ ======
+
+// Прямий вибір файлу при натисканні скріпки
+document.addEventListener('DOMContentLoaded', function() {
+  const attachBtn = document.getElementById('attachBtn');
+  const msgInput = document.getElementById('msgInput');
+  if (!attachBtn) { console.error('❌ attachBtn not found'); return; }
+
+  // Створюємо прихований input для файлів
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.style.display = 'none';
+  fileInput.accept = 'image/*,audio/*,.pdf,.doc,.docx,.txt,.zip';
+  document.body.appendChild(fileInput);
+
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    const type = file.type.startsWith('image/') ? 'image' :
+                 file.type.startsWith('audio/') ? 'audio' : 'file';
+    reader.onload = function(ev) {
+      attachedFile = {
+        type: type,
+        name: file.name,
+        mime: file.type || 'application/octet-stream',
+        data: ev.target.result
+      };
+      document.getElementById('attachName').textContent =
+        (type === 'image' ? '🖼' : type === 'audio' ? '🎤' : '📎') + ' ' + file.name;
+      document.getElementById('attachPreview').classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = '';
+  });
+
+  attachBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('📎 натиснуто');
+    fileInput.click();
+  });
+
+  attachBtn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    fileInput.click();
+  });
+
+  // Закривати прев'ю по кліку на ✕
+  document.querySelector('.remove-attach')?.addEventListener('click', function() {
+    attachedFile = null;
+    document.getElementById('attachPreview').classList.remove('visible');
+  });
+});
+
+function closeAttachMenu() {}
+
+function removeAttachment() {
+  attachedFile = null;
+  document.getElementById('attachPreview').classList.remove('visible');
+}
+
+function attachPhoto() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: 'image/jpeg', data: ev.target.result}, 'image'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+function attachGallery() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'image'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+function attachAudio() {
+  if (isRecording) { stopRecording(); return; }
+  startRecording();
+}
+
+async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia) { alert('Голос не підтримується'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    recordingChunks = []; recordingSec = 0; isRecording = true;
+
+    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordingChunks.push(e.data); };
+    mediaRecorder.onstop = function() {
+      stream.getTracks().forEach(t => t.stop()); isRecording = false; clearInterval(recordingTimer);
+      const blob = new Blob(recordingChunks, { type: 'audio/webm' });
+      if (blob.size < 100) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: 'voice.webm', type: 'audio/webm', data: ev.target.result}, 'audio'); };
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+    document.getElementById('recordingIndicator').classList.add('visible');
+    document.getElementById('attachBtn').textContent = '⏹';
+    closeAttachMenu();
+
+    recordingTimer = setInterval(function() {
+      recordingSec++;
+      const m = String(Math.floor(recordingSec / 60)).padStart(2, '0');
+      const s = String(recordingSec % 60).padStart(2, '0');
+      document.getElementById('recordingTime').textContent = m + ':' + s;
+    }, 1000);
+  } catch (e) { alert('Мікрофон: ' + e.message); }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  document.getElementById('recordingIndicator').classList.remove('visible');
+  document.getElementById('attachBtn').textContent = '📎';
+  isRecording = false; clearInterval(recordingTimer);
+}
+
+function attachFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'image'); };
+      reader.readAsDataURL(file); return;
+    }
+    if (file.type.startsWith('audio/')) {
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'audio'); };
+      reader.readAsDataURL(file); return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: file.type || 'application/octet-stream', data: ev.target.result}, 'file'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+// ====== ЕКСПОРТ ======
+
+function exportChat() {
+  if (chatHistory.length === 0) { alert('Немає повідомлень'); return; }
+  const text = chatHistory.map(m => {
+    let t = '**' + (m.role === 'user' ? 'Ти' : 'Hermes') + ':**\n' + m.text;
+    return t;
+  }).join('\n\n---\n\n');
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hermes-chat-' + new Date().toISOString().slice(0, 19) + '.md';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ====== САЙДБАР ======
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('visible');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+}
+
+// ====== УТИЛІТИ ======
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function timeAgo(ts) {
+  const diff = Date.now()/1000 - ts;
+  if (diff < 60) return 'щойно';
+  if (diff < 3600) return Math.floor(diff/60) + 'хв';
+  if (diff < 86400) return Math.floor(diff/3600) + 'год';
+  return Math.floor(diff/86400) + 'д';
+}
+
+// ====== СТАРТ ======
+
+loadSessions();
+
+// Періодичне оновлення списку
+setInterval(loadSessions, 10000);
+</script>
+</body>
+</html>

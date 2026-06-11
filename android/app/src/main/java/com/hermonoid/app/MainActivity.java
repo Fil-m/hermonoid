@@ -28,13 +28,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Використовуємо SwipeRefreshLayout для перезавантаження
         swipeRefresh = new SwipeRefreshLayout(this);
         swipeRefresh.setRefreshing(true);
 
         webView = new WebView(this);
 
-        // Налаштування WebView
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -43,12 +41,9 @@ public class MainActivity extends AppCompatActivity {
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-
-        // Відключаємо стандартний зум
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
-        // WebViewClient з перехопленням навігації
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -58,19 +53,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 swipeRefresh.setRefreshing(false);
-                // Автоматично ховаємо адресний рядок
-                webView.evaluateJavascript(
-                    "document.querySelector('meta[name=viewport]')?.content = " +
-                    "'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';",
-                    null
-                );
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-
-                // Deep links відкриваємо в зовнішніх додатках
                 if (url.startsWith("tg://") || url.startsWith("viber://") ||
                     url.startsWith("whatsapp://") || url.startsWith("intent://")) {
                     try {
@@ -78,13 +65,10 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception ignored) {}
                     return true;
                 }
-
-                // Звичайні посилання відкриваємо всередині WebView
                 return false;
             }
         });
 
-        // File chooser для завантаження файлів
         webView.setWebChromeClient(new android.webkit.WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView webView,
@@ -110,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Додаємо WebView в SwipeRefreshLayout
         swipeRefresh.addView(webView, new SwipeRefreshLayout.LayoutParams(
             SwipeRefreshLayout.LayoutParams.MATCH_PARENT,
             SwipeRefreshLayout.LayoutParams.MATCH_PARENT
@@ -118,10 +101,8 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(swipeRefresh);
 
-        // Обробка свайпу для оновлення
         swipeRefresh.setOnRefreshListener(() -> webView.reload());
 
-        // Завантажуємо Hermonoid
         webView.loadUrl("http://localhost:8080");
     }
 
