@@ -235,6 +235,42 @@
   .feature-item .fi-title { font-size: 14px; font-weight: 600; }
   .feature-item .fi-desc { font-size: 12px; color: var(--text2); margin-top: 4px; }
 
+  /* ===== QUICK LAUNCH ===== */
+  .quick-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 20px 48px;
+  }
+  .quick-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .quick-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .quick-item:hover { border-color: var(--accent); }
+  .quick-item .qi-cmd {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  .quick-item .qi-desc { font-size: 12px; color: var(--text2); }
+  .quick-item .qi-icon { font-size: 24px; margin-bottom: 6px; }
+
   /* ===== WALL ===== */
   .wall-section {
     max-width: 720px;
@@ -548,6 +584,56 @@
       <div class="fi-title">Мережа</div>
       <div class="fi-desc">Доступ з інших пристроїв</div>
     </div>
+  </div>
+</section>
+
+<!-- ===== QUICK LAUNCH ===== -->
+<section class="quick-section">
+  <h2>🚀 Швидкий запуск</h2>
+  <div class="quick-grid">
+    <div class="quick-item">
+      <div class="qi-icon">🚀</div>
+      <div class="qi-cmd">hurl</div>
+      <div class="qi-desc">Запустити сервер + відкрити браузер</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">💬</div>
+      <div class="qi-cmd">hchat</div>
+      <div class="qi-desc">Запустити веб-чат</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">🛑</div>
+      <div class="qi-cmd">hstop</div>
+      <div class="qi-desc">Зупинити сервер</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">📋</div>
+      <div class="qi-cmd">hstatus</div>
+      <div class="qi-desc">Статус сервера</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">📜</div>
+      <div class="qi-cmd">hlog</div>
+      <div class="qi-desc">Лог сервера</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">🔄</div>
+      <div class="qi-cmd">hupdate</div>
+      <div class="qi-desc">Оновити з GitHub</div>
+    </div>
+    <div class="quick-item" style="border-color:var(--accent)">
+      <div class="qi-icon">🏠</div>
+      <div class="qi-cmd">hshortcut</div>
+      <div class="qi-desc">Ярлик на робочий стіл Android</div>
+    </div>
+    <div class="quick-item">
+      <div class="qi-icon">⚙️</div>
+      <div class="qi-cmd">hsetup</div>
+      <div class="qi-desc">Повторне налаштування</div>
+    </div>
+  </div>
+  <div class="install-note" style="margin-top:16px">
+    <strong>💡</strong> Після встановлення просто напиши <code style="color:var(--green)">hurl</code> в Termux — сервер запуститься і браузер відкриється сам.
   </div>
 </section>
 

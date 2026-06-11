@@ -109,6 +109,26 @@ else
     CLIP_MSG="(termux-clipboard-set недоступний — скопіюй вручну)"
 fi
 
+# Додаємо alias-и в .bashrc
+ALIASES=$(cat << 'ALIAS'
+# ====== HERMONOID ======
+alias hermonoid='cd ~/hermonoid && python3 server/server.py'
+alias hchat='cd ~/hermonoid && python3 server/server.py'
+alias hurl='bash ~/hermonoid/scripts/hurl.sh'
+alias hshortcut='bash ~/hermonoid/scripts/hshortcut.sh'
+alias hstart='bash ~/hermonoid/start.sh'
+alias hstop='pkill -f "server.py" 2>/dev/null; echo "🛑 Сервер зупинено"'
+alias hstatus='pgrep -af server.py | grep -v bash || echo "⚫ Сервер не запущений"'
+alias hlog='tail -f ~/hermonoid/server.log'
+alias hupdate='cd ~/hermonoid && git pull && echo "🔄 Оновлено"'
+alias hsetup='python3 ~/hermonoid/scripts/hermonoid.py'
+ALIAS
+)
+if ! grep -q "HERMONOID" ~/.bashrc 2>/dev/null; then
+    echo "$ALIASES" >> ~/.bashrc
+    echo -e "${GREEN}  → alias додано в ~/.bashrc${NC}"
+fi
+
 # ============================================================
 # Фінальний вивід
 # ============================================================
@@ -121,11 +141,14 @@ echo -e "║${NC}"
 echo -e "║  ${CYAN}Відкрий у браузері:${NC}"
 echo -e "║  ${GREEN}${LOCAL_URL}${NC}  $CLIP_MSG"
 echo -e "║"
-echo -e "║  ${BLUE}Або через мережу (з іншого пристрою):${NC}"
+echo -e "║  ${YELLOW}Або просто напиши:${NC} ${GREEN}hurl${NC}"
+echo -e "║  ${BLUE}Ярлик на стіл:${NC} ${GREEN}hshortcut${NC}"
+echo -e "║"
+echo -e "║  Або через мережу (з іншого пристрою):${NC}"
 echo -e "║  ${BLUE}${NET_URL}${NC}"
 echo -e "║${NC}"
 echo "╠══════════════════════════════════════════════════╣"
-echo "║  Подальші кроки у веб-інтерфейсі:               ║"
+echo "║  Подальші кроки:                                ║"
 echo "║  1. Налаштуй підключення до моделі               ║"
 echo "║  2. Обери або створи нову сесію                  ║"
 echo "║  3. Починай спілкування з Hermes Agent!          ║"
