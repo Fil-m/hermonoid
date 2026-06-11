@@ -1,15 +1,15 @@
 plugins {
-    id 'com.android.application' version '8.2.0'
+    id 'com.android.application' version '8.5.2'
 }
 
 android {
     namespace 'com.hermonoid.app'
-    compileSdk 29
+    compileSdk 34
 
     defaultConfig {
         applicationId 'com.hermonoid.app'
         minSdk 26
-        targetSdk 29
+        targetSdk 34
         versionCode 1
         versionName '1.0.0'
     }
@@ -30,4 +30,5 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.webkit:webkit:1.9.0'
     implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }
