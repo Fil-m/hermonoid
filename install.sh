@@ -103,6 +103,14 @@ WIDGET2
 chmod +x "$HOME/.shortcuts/terminal.sh"
 echo -e "  ${GREEN}✓${NC} Скрипт terminal.sh створено"
 
+# Копіюємо в загальнодоступну папку (для Android 14+)
+if [ -d "/storage/emulated/0/.shortcuts" ] || mkdir -p "/storage/emulated/0/.shortcuts" 2>/dev/null; then
+    cp "$HOME/.shortcuts/hermonoid.sh" "/storage/emulated/0/.shortcuts/hermonoid.sh" 2>/dev/null
+    cp "$HOME/.shortcuts/terminal.sh" "/storage/emulated/0/.shortcuts/terminal.sh" 2>/dev/null
+    chmod +x "/storage/emulated/0/.shortcuts"/*.sh 2>/dev/null
+    echo -e "  ${GREEN}✓${NC} Скопійовано в загальнодоступне сховище"
+fi
+
 # ============================================================
 # Крок 5: Встановлення Termux:Widget (віджет на робочий стіл)
 # ============================================================
