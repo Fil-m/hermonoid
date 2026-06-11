@@ -271,6 +271,45 @@
   .quick-item .qi-desc { font-size: 12px; color: var(--text2); }
   .quick-item .qi-icon { font-size: 24px; margin-bottom: 6px; }
 
+  /* ===== TROUBLESHOOTING ===== */
+  .trouble-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 20px 48px;
+  }
+  .trouble-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .trouble-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .trouble-item .ti-problem {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+  .trouble-item .ti-problem::before { content: '⚠ '; }
+  .trouble-item .ti-solution {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .trouble-item .ti-solution code {
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--green);
+  }
+
   /* ===== WALL ===== */
   .wall-section {
     max-width: 720px;
@@ -596,6 +635,15 @@
   </div>
 </section>
 
+<!-- ===== SCREENSHOTS ===== -->
+<section class="features-section">
+  <h2>📱 Як це виглядає</h2>
+  <div style="text-align:center">
+    <img src="assets/chat-preview.png" alt="Hermonoid Chat Preview" style="max-width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:600px">
+    <p style="color:var(--text2);font-size:13px;margin-top:8px">Веб-чат Hermonoid на Android — темна тема, сесії, голос, медіа</p>
+  </div>
+</section>
+
 <!-- ===== QUICK LAUNCH ===== -->
 <section class="quick-section">
   <h2>🚀 Швидкий запуск</h2>
@@ -643,6 +691,63 @@
   </div>
   <div class="install-note" style="margin-top:16px">
     <strong>💡</strong> Після встановлення просто напиши <code style="color:var(--green)">hurl</code> в Termux — сервер запуститься і браузер відкриється сам.
+  </div>
+</section>
+
+<!-- ===== TROUBLESHOOTING ===== -->
+<section class="trouble-section">
+  <h2>🔧 Якщо щось не працює</h2>
+
+  <div class="trouble-item">
+    <div class="ti-problem">Сервер не запускається</div>
+    <div class="ti-solution">
+      Перевір чи порт 8080 не зайнятий: <code>pkill -f "server.py"</code><br>
+      Подивись лог помилок: <code>cat /tmp/hermonoid.log</code><br>
+      Запусти вручну: <code>cd ~/hermonoid && python3 server/server.py</code>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="ti-problem">"Address already in use"</div>
+    <div class="ti-solution">
+      Старий процес сервера висить. Вбий його: <code>pkill -f "server.py"</code><br>
+      Потім запусти знову: <code>hurl</code>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="ti-problem">"Module not found" або "ImportError"</div>
+    <div class="ti-solution">
+      Встанови залежності: <code>pip install -r ~/hermonoid/requirements.txt</code><br>
+      Або онови Hermes: <code>hupdate</code>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="ti-problem">Сторінка не відкривається в браузері</div>
+    <div class="ti-solution">
+      Спробуй відкрити вручну: <code>http://localhost:8080</code><br>
+      Або використай мережеву адресу (показана після встановлення)<br>
+      Якщо браузер не відкрився сам — напиши <code>termux-open-url http://localhost:8080</code>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="ti-problem">Сервер запустився, але Hermes не відповідає</div>
+    <div class="ti-solution">
+      Перевір чи налаштована модель: <code>hermes config</code><br>
+      Перевір API ключ: <code>cat ~/.hermes/.env</code><br>
+      Або налаштуй заново: <code>hsetup</code>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="ti-problem">Інші помилки</div>
+    <div class="ti-solution">
+      Подивись повний лог сервера: <code>cat /tmp/hermonoid.log</code><br>
+      Онови Hermonoid з GitHub: <code>hupdate</code><br>
+      Якщо нічого не допомогло — створи Issue на <a href="https://github.com/Fil-m/hermonoid/issues" style="color:var(--accent2)" target="_blank">GitHub</a>
+    </div>
   </div>
 </section>
 

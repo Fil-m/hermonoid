@@ -1,0 +1,11 @@
+# Залежності Hermonoid
+# Встановлення: pip install -r requirements.txt
+
+# Основні
+hermes-agent>=1.0.0
+requests>=2.31.0
+Pillow>=10.0.0
+qrcode>=7.4.0
+
+# Додатково (якщо не вистачає)
+# python-dotenv>=1.0.0

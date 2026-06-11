@@ -13,6 +13,8 @@ GREEN='\033[1;32m'
 BLUE='\033[1;34m'
 YELLOW='\033[1;33m'
 CYAN='\033[1;36m'
+RED='\033[1;31m'
+DIM='\033[2m'
 NC='\033[0m' # No Color
 
 echo -e "${CYAN}"
@@ -149,8 +151,44 @@ pkill -f "server/server.py" 2>/dev/null || true
 sleep 1
 
 # Запускаємо новий
-nohup python3 server/server.py > /tmp/hermonoid.log 2>&1 &
-sleep 3
+LOG_FILE="/tmp/hermonoid.log"
+nohup python3 server/server.py > "$LOG_FILE" 2>&1 &
+PID=$!
+
+# Чекаємо з перевіркою (до 10 секунд)
+echo -e "${BLUE}  → Очікування запуску...${NC}"
+SERVER_OK=false
+for i in 1 2 3 4 5 6 7 8 9 10; do
+    sleep 1
+    if curl -s http://localhost:8080/api/status > /dev/null 2>&1; then
+        SERVER_OK=true
+        echo -e "  ${GREEN}✓${NC} Сервер запущено! (PID: $PID)"
+        break
+    fi
+    # Показуємо процес
+    if ! kill -0 $PID 2>/dev/null; then
+        echo -e "  ${RED}✗${NC} Процес сервера впав на $i секунді"
+        break
+    fi
+done
+
+# Якщо сервер не запустився — діагностика
+if [ "$SERVER_OK" = false ]; then
+    echo -e "\n  ${RED}✗${NC} Сервер не запустився. Діагностика:"
+    if [ -f "$LOG_FILE" ]; then
+        echo -e "  ${YELLOW}Лог сервера (останні 10 рядків):${NC}"
+        tail -10 "$LOG_FILE" | while read line; do
+            echo -e "    ${DIM}$line${NC}"
+        done
+    fi
+    echo -e "\n  ${YELLOW}Можливі причини:${NC}"
+    echo -e "  • Порт 8080 зайнятий → ${CYAN}pkill -f \"server.py\" && hurl${NC}"
+    echo -e "  • Python-залежності → ${CYAN}pip install -r ~/hermonoid/requirements.txt${NC}"
+    echo -e "  • Детальніше: ${CYAN}cat $LOG_FILE${NC}"
+    echo
+    echo -e "  ${YELLOW}Але ти можеш запустити вручну:${NC}"
+    echo -e "  ${GREEN}hurl${NC} — одна команда (запуск + браузер)"
+fi
 
 # Отримуємо локальну IP
 IP_ADDR=$(ifconfig 2>/dev/null | grep -oP 'inet \d+\.\d+\.\d+\.\d+' | grep -v '127.0.0.1' | head -1 | awk '{print $2}')
@@ -192,9 +230,18 @@ fi
 # Фінальний вивід
 # ============================================================
 clear
+
+if [ "$SERVER_OK" = true ]; then
+    STATUS_ICON="✅"
+    STATUS_TEXT="Hermonoid встановлено та запущено!"
+else
+    STATUS_ICON="⚠️"
+    STATUS_TEXT="Hermonoid встановлено, але сервер не запустився"
+fi
+
 echo -e "${GREEN}"
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     ✅ Hermonoid встановлено та запущено!        ║"
+echo "║     $STATUS_ICON $STATUS_TEXT        ║"
 echo "╠══════════════════════════════════════════════════╣"
 echo -e "║${NC}"
 echo "║  ${CYAN}Відкрий у браузері:${NC}"

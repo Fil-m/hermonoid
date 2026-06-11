@@ -96,6 +96,11 @@ hsetup       # Повторне налаштування
 bash ~/hermonoid/start.sh
 ```
 
+Або просто:
+```bash
+hurl
+```
+
 Або додай у `~/.bashrc`:
 
 ```bash
@@ -103,6 +108,21 @@ echo "bash ~/hermonoid/start.sh" >> ~/.bashrc
 ```
 
 Тоді Hermonoid стартуватиме автоматично при кожному вході.
+
+---
+
+## 🔧 Troubleshooting
+
+| Проблема | Рішення |
+|----------|---------|
+| Сервер не запускається | `pkill -f "server.py"` потім `hurl` |
+| "Address already in use" | `pkill -f "server.py" && hurl` |
+| "Module not found" | `pip install -r ~/hermonoid/requirements.txt` |
+| Сторінка не відкривається | Відкрий `http://localhost:8080` вручну |
+| Hermes не відповідає | `hermes config` — перевір модель і ключ |
+| Інші помилки | `cat /tmp/hermonoid.log` — подивись лог |
+
+Якщо нічого не допомогло — створи Issue на [GitHub](https://github.com/Fil-m/hermonoid/issues).
 
 ---
 
