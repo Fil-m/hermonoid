@@ -195,7 +195,10 @@ def chat_with_hermes(message, session_id=None, history=None):
     try:
         cmd = [HERMES_BIN, "chat", "-q", message, "--quiet"]
         if session_id:
-            cmd.extend(["--resume", session_id])
+            # Перевіряємо чи це реальна сесія Hermes CLI
+            check = subprocess.run([HERMES_BIN, "sessions", "list"], capture_output=True, text=True, timeout=10)
+            if session_id in check.stdout:
+                cmd.extend(["--resume", session_id])
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=180,
                                 env={**os.environ, "TERM": "xterm-256color"})
         if result.returncode == 0 and result.stdout.strip():

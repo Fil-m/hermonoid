@@ -2,847 +2,913 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hermonoid — Web Chat для Hermes Agent на Android</title>
-<meta name="description" content="Hermonoid — веб-чат для Hermes Agent. Працює на Android через Termux. Одна команда для встановлення.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hermes Chat</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --text: #eee;
+    --text2: #aaa;
+    --user-bg: #0f3460;
+    --hermes-bg: #1a3a5c;
+    --border: #2a2a4a;
+    --sidebar-w: 280px;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a3a;
-    --text: #e4e4ed;
-    --text2: #8888a0;
-    --accent: #6c5ce7;
-    --accent2: #00cec9;
-    --accent-glow: rgba(108, 92, 231, 0.15);
-    --green: #00b894;
-    --yellow: #fdcb6e;
-    --red: #e17055;
-    --radius: 12px;
-  }
-
   body {
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* ===== HERO ===== */
-  .hero {
-    text-align: center;
-    padding: 80px 20px 40px;
-    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
     overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .hero-logo {
-    font-size: 64px;
-    margin-bottom: 16px;
-    position: relative;
-  }
-  .hero h1 {
-    font-size: clamp(36px, 6vw, 64px);
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    position: relative;
-  }
-  .hero p {
-    max-width: 600px;
-    margin: 16px auto 0;
-    color: var(--text2);
-    font-size: 18px;
-    position: relative;
-  }
-  .hero-badges {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    position: relative;
-  }
-  .badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-    color: var(--text2);
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
   }
 
-  /* ===== INSTALL SECTION ===== */
-  .install-section {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 20px 40px;
-  }
-
-  .step-card {
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 16px;
-    transition: border-color 0.2s;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 20;
+    transition: transform 0.25s ease;
   }
-  .step-card:hover {
-    border-color: var(--accent);
-  }
-  .step-card .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    margin-right: 12px;
-  }
-  .step-card h3 {
-    display: inline;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .step-card p {
-    color: var(--text2);
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .cmd-box {
-    background: #000;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 8px;
   }
-  .cmd-box code {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 14px;
-    color: var(--green);
-    word-break: break-all;
-    flex: 1;
-  }
-  .cmd-copy {
-    flex-shrink: 0;
+  .sidebar-header h3 { font-size: 16px; flex: 1; }
+  .sidebar-header .new-btn {
     background: var(--accent);
     border: none;
-    color: #fff;
-    padding: 8px 16px;
+    color: white;
+    width: 32px; height: 32px;
     border-radius: 8px;
+    font-size: 16px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-    white-space: nowrap;
   }
-  .cmd-copy:hover {
-    background: #5a4bd1;
-    transform: scale(1.02);
+  .sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
   }
-  .cmd-copy.copied {
-    background: var(--green);
-  }
-  .cmd-copy i { margin-right: 6px; }
+  .sidebar-list::-webkit-scrollbar { width: 3px; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
-  .termux-dl {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 10px 20px;
-    border-radius: var(--radius);
-    color: var(--text);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
-    margin-top: 8px;
-  }
-  .termux-dl:hover {
-    border-color: var(--accent);
-    background: var(--surface);
-  }
-
-  .install-note {
-    background: var(--surface2);
-    border-left: 3px solid var(--yellow);
-    padding: 12px 16px;
-    border-radius: 0 var(--radius) var(--radius) 0;
-    margin-top: 12px;
-    font-size: 13px;
-    color: var(--text2);
-  }
-  .install-note strong { color: var(--yellow); }
-
-  /* ===== WHAT IT DOES ===== */
-  .features-section {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 20px 60px;
-  }
-  .features-section h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  .feature-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    text-align: center;
-    transition: border-color 0.2s;
-  }
-  .feature-item:hover {
-    border-color: var(--accent2);
-  }
-  .feature-item .fi-icon { font-size: 28px; margin-bottom: 8px; }
-  .feature-item .fi-title { font-size: 14px; font-weight: 600; }
-  .feature-item .fi-desc { font-size: 12px; color: var(--text2); margin-top: 4px; }
-
-  /* ===== QUICK LAUNCH ===== */
-  .quick-section {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 20px 48px;
-  }
-  .quick-section h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .quick-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-  }
-  .quick-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    text-align: center;
-    transition: border-color 0.2s;
-  }
-  .quick-item:hover { border-color: var(--accent); }
-  .quick-item .qi-cmd {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--green);
+  .session-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
     margin-bottom: 4px;
   }
-  .quick-item .qi-desc { font-size: 12px; color: var(--text2); }
-  .quick-item .qi-icon { font-size: 24px; margin-bottom: 6px; }
-
-  /* ===== WALL ===== */
-  .wall-section {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 20px 60px;
-  }
-  .wall-section h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .wall-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .wall-tab {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
+  .session-item:hover { background: var(--surface2); }
+  .session-item.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+  .session-item .s-title {
     font-size: 13px;
-    color: var(--text2);
-    transition: all 0.2s;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .wall-tab:hover { border-color: var(--accent); color: var(--text); }
-  .wall-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-  .review-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 12px;
-    position: relative;
-  }
-  .review-card .rc-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .review-card .rc-avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--accent2);
-    flex-shrink: 0;
-  }
-  .review-card .rc-name { font-weight: 600; font-size: 14px; }
-  .review-card .rc-date { font-size: 12px; color: var(--text2); }
-  .review-card .rc-stars { color: var(--yellow); font-size: 14px; margin-left: auto; }
-  .review-card .rc-text { font-size: 14px; color: var(--text); line-height: 1.5; }
-  .review-card .rc-tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 10px;
+  .session-item .s-meta {
     font-size: 11px;
     color: var(--text2);
-    margin-top: 8px;
-  }
-
-  .wall-form {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-top: 24px;
-  }
-  .wall-form h3 { font-size: 16px; margin-bottom: 12px; }
-  .wall-form input, .wall-form textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    margin-bottom: 10px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .wall-form input:focus, .wall-form textarea:focus {
-    border-color: var(--accent);
-  }
-  .wall-form textarea {
-    min-height: 80px;
-    resize: vertical;
-  }
-  .wall-form .form-row {
     display: flex;
-    gap: 10px;
+    gap: 6px;
+    margin-top: 2px;
   }
-  .wall-form .form-row input { flex: 1; }
-  .wall-form .star-picker {
+
+  /* ===== MAIN ===== */
+  .main {
+    flex: 1;
     display: flex;
-    gap: 4px;
-    margin-bottom: 10px;
-  }
-  .wall-form .star-picker span {
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--border);
-    transition: color 0.15s;
-    user-select: none;
-  }
-  .wall-form .star-picker span.active { color: var(--yellow); }
-  .wall-form .star-picker span:hover { color: var(--yellow); }
-
-  .wall-form button {
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    padding: 10px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .wall-form button:hover { background: #5a4bd1; }
-
-  .wall-empty {
-    text-align: center;
-    padding: 40px;
-    color: var(--text2);
-    font-size: 14px;
+    flex-direction: column;
+    min-width: 0;
   }
 
-  /* ===== ABOUT / AUTHOR ===== */
-  .about-section {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 20px 60px;
-  }
-  .about-section details {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    cursor: pointer;
-  }
-  .about-section details summary {
-    font-weight: 600;
-    font-size: 15px;
-    outline: none;
-    list-style: none;
+  .topbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-  }
-  .about-section details summary::after {
-    content: '▼';
-    font-size: 10px;
-    color: var(--text2);
-    transition: transform 0.2s;
-  }
-  .about-section details[open] summary::after {
-    transform: rotate(180deg);
-  }
-  .about-section details .about-content {
-    margin-top: 14px;
-    color: var(--text2);
-    font-size: 14px;
-    line-height: 1.7;
-  }
-  .about-section details .about-content a {
-    color: var(--accent2);
-    text-decoration: none;
-  }
-  .about-section details .about-content a:hover { text-decoration: underline; }
-  .about-section details .about-content .projects {
-    display: flex;
-    flex-wrap: wrap;
     gap: 8px;
-    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 48px;
+    z-index: 10;
   }
-  .about-section details .about-content .projects a {
+  .topbar .menu-btn {
+    display: none;
+    background: none; border: none; color: var(--text2);
+    font-size: 20px; cursor: pointer; padding: 4px;
+  }
+  .topbar h2 {
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar .model-badge {
+    font-size: 10px;
     background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--text);
-    text-decoration: none;
-    transition: border-color 0.2s;
-  }
-  .about-section details .about-content .projects a:hover {
-    border-color: var(--accent);
-  }
-
-  /* ===== FOOTER ===== */
-  footer {
-    text-align: center;
-    padding: 30px 20px;
+    padding: 3px 8px;
+    border-radius: 10px;
     color: var(--text2);
-    font-size: 13px;
-    border-top: 1px solid var(--border);
+    white-space: nowrap;
   }
-  footer a { color: var(--accent2); text-decoration: none; }
-  footer a:hover { text-decoration: underline; }
+  .topbar .icon-btn {
+    background: none; border: none; color: var(--text2);
+    font-size: 17px; cursor: pointer; padding: 6px;
+    border-radius: 8px; transition: all 0.2s;
+    line-height: 1; min-width: 30px; text-align: center;
+  }
+  .topbar .icon-btn:hover { color: var(--text); background: var(--surface2); }
 
-  /* ===== RESPONSIVE ===== */
-  @media (max-width: 480px) {
-    .cmd-box { flex-direction: column; align-items: stretch; }
-    .cmd-box code { font-size: 12px; }
-    .cmd-copy { text-align: center; }
-    .hero { padding: 40px 16px 24px; }
-    .step-card { padding: 16px; }
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  .msg {
+    max-width: 88%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    line-height: 1.5;
+    font-size: 14px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.user { align-self: flex-end; background: var(--user-bg); border-bottom-right-radius: 4px; }
+  .msg.hermes { align-self: flex-start; background: var(--hermes-bg); border-bottom-left-radius: 4px; }
+  .msg.system { align-self: center; background: transparent; color: var(--text2); font-size: 12px; font-style: italic; max-width: 100%; text-align: center; padding: 6px 12px; }
+  .msg .label { font-size: 10px; font-weight: 600; margin-bottom: 3px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg .label.user-label { color: #64b5f6; }
+  .msg .label.hermes-label { color: #81c784; }
+
+  .msg pre { background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 8px; overflow-x: auto; font-size: 12px; margin: 6px 0; white-space: pre; }
+  .msg code { background: rgba(0,0,0,0.35); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+  .msg .media-attachment { margin-top: 6px; border-radius: 10px; overflow: hidden; max-width: 100%; }
+  .msg .media-attachment img { max-width: 100%; max-height: 250px; border-radius: 10px; display: block; cursor: pointer; }
+  .msg .media-attachment audio { width: 100%; border-radius: 8px; }
+
+  .typing {
+    align-self: flex-start;
+    color: var(--text2); font-size: 13px; padding: 8px 14px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .typing .dots { display: flex; gap: 3px; }
+  .typing .dot { width: 5px; height: 5px; background: var(--text2); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+  .typing .dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+  /* ===== INPUT ===== */
+  .input-container {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 10px 10px;
+    z-index: 10;
+  }
+  .tools-row {
+    display: flex; gap: 4px; padding: 0 0 6px;
+    overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+  }
+  .tools-row::-webkit-scrollbar { display: none; }
+  .tool-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); padding: 5px 10px; border-radius: 14px;
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tool-chip:hover { border-color: var(--accent); color: var(--text); }
+
+  .input-row { display: flex; align-items: flex-end; gap: 6px; }
+  .attach-btn {
+    background: none; border: none; color: var(--text2);
+    font-size: 20px; cursor: pointer; padding: 6px 4px; border-radius: 8px;
+    transition: all 0.2s; line-height: 1; flex-shrink: 0; min-width: 36px; text-align: center;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    z-index: 10; position: relative;
+  }
+  .attach-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .input-area {
+    flex: 1; display: flex; align-items: flex-end;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 4px 4px 14px; transition: border 0.2s;
+  }
+  .input-area:focus-within { border-color: var(--accent); }
+  .input-area textarea {
+    flex: 1; background: transparent; border: none;
+    padding: 8px 4px; color: var(--text); font-size: 14px;
+    font-family: inherit; resize: none; outline: none;
+    min-height: 22px; max-height: 100px; line-height: 1.4;
+  }
+  .input-area textarea::placeholder { color: var(--text2); }
+  .send-btn {
+    background: var(--accent); border: none; color: white;
+    width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, background 0.15s; flex-shrink: 0;
+  }
+  .send-btn:hover { transform: scale(1.08); background: #ff6b81; }
+  .send-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .attach-preview { display: none; align-items: center; gap: 8px; padding: 6px 4px 4px; font-size: 12px; color: var(--text2); }
+  .attach-preview.visible { display: flex; }
+  .attach-preview .preview-file { background: var(--surface2); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 6px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attach-preview .remove-attach { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 16px; padding: 2px; }
+
+  .attach-menu {
+    display: none; position: absolute; bottom: 100%; left: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 6px; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    z-index: 20; gap: 4px; flex-wrap: wrap; max-width: 260px;
+  }
+  .attach-menu.visible { display: flex; }
+  .attach-option {
+    background: var(--surface2); border: none; color: var(--text);
+    padding: 10px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s; flex: 1 0 45%; min-width: 100px;
+  }
+  .attach-option:hover { background: var(--accent); }
+
+  .recording-indicator { display: none; align-items: center; gap: 8px; padding: 4px 6px; font-size: 13px; color: var(--accent); }
+  .recording-indicator.visible { display: flex; }
+  .rec-pulse { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite; }
+  @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.6; } }
+
+  .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 5; }
+  .overlay.visible { display: block; }
+
+  .img-viewer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .img-viewer.visible { display: flex; }
+  .img-viewer img { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+  .img-viewer .close-viewer { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+
+  .context-menu {
+    display: none; position: fixed; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px; z-index: 50; min-width: 140px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .context-menu.visible { display: block; }
+  .ctx-item {
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+    border-radius: 6px; transition: background 0.15s;
+  }
+  .ctx-item:hover { background: var(--surface2); }
+  .ctx-item.danger { color: var(--accent); }
+
+  @media(max-width: 767px) {
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .topbar .menu-btn { display: block; }
   }
 </style>
 </head>
 <body>
 
-<!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="hero-logo">🤖</div>
-  <h1>Hermonoid</h1>
-  <p>Веб-чат для Hermes Agent на Android. Працює через Termux. Жодного root — просто термінал і браузер.</p>
-  <div class="hero-badges">
-    <span class="badge">⚡ One‑Click Install</span>
-    <span class="badge">📱 Android + Termux</span>
-    <span class="badge">🔗 Веб‑інтерфейс</span>
-    <span class="badge">🧠 Hermes Agent</span>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>💬 Hermes</h3>
+    <button class="new-btn" onclick="newSession()" title="Новий чат">+</button>
   </div>
-</section>
+  <div class="sidebar-list" id="sessionList"></div>
+</div>
 
-<!-- ===== INSTALL ===== -->
-<section class="install-section">
-  <div class="step-card">
-    <span class="step-num">1</span>
-    <h3>Встанови Termux</h3>
-    <p>Завантаж з F-Droid або GitHub — там найсвіжіша версія.</p>
-    <a class="termux-dl" href="https://f-droid.org/packages/com.termux/" target="_blank">
-      <span>⬇</span> Завантажити Termux (F-Droid)
-    </a>
-    <a class="termux-dl" href="https://github.com/termux/termux-app/releases" target="_blank" style="margin-left:8px">
-      <span>⬇</span> GitHub Releases
-    </a>
+<!-- Overlay for mobile sidebar -->
+<div class="overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h2 id="chatTitle">Hermes Chat</h2>
+    <span class="model-badge">deepseek</span>
+    <button class="icon-btn" onclick="renameCurrent()" title="Перейменувати">✏️</button>
+    <button class="icon-btn" onclick="exportChat()" title="Експорт">📥</button>
+    <button class="icon-btn" onclick="deleteCurrent()" title="Видалити">🗑</button>
   </div>
 
-  <div class="step-card">
-    <span class="step-num">2</span>
-    <h3>Встав і виконай команду</h3>
-    <p>Відкрий Termux, скопіюй і встав цю команду та натисни Enter:</p>
-    <div class="cmd-box">
-      <code id="install-cmd">bash <(curl -s https://raw.githubusercontent.com/Fil-m/hermonoid/main/install.sh)</code>
-      <button class="cmd-copy" onclick="copyCmd(this)"><i>📋</i> Copy</button>
-    </div>
-    <div class="install-note">
-      <strong>⏱</strong> Встановлення займає 1–3 хвилини. Все робиться автоматично — оновлення, залежності, клонування, запуск.
+  <div class="chat-area" id="chatArea">
+    <div class="msg system">
+      🤖 <strong>Hermes Chat</strong> — обери сесію зліва або створи нову ➕
     </div>
   </div>
 
-  <div class="step-card">
-    <span class="step-num">3</span>
-    <h3>Перейди в браузер</h3>
-    <p>Посилання <code>http://localhost:8080</code> скопіюється в буфер автоматично. Встав його в будь-якому браузері на телефоні — і ти в системі.</p>
-  </div>
+  <div class="input-container" id="inputContainer">
+    <div class="tools-row">
+      <span class="tool-chip" onclick="insertText('виконай команду: ')">🖥 cmd</span>
+      <span class="tool-chip" onclick="insertText('прочитай файл ')">📖 read</span>
+      <span class="tool-chip" onclick="insertText('напиши Python: ')">🐍 py</span>
+      <span class="tool-chip" onclick="insertText('створи файл ')">✏️ write</span>
+      <span class="tool-chip" onclick="insertText('пошукай файли ')">🔍 find</span>
+      <span class="tool-chip" onclick="insertText('HTTP запит: ')">🌐 http</span>
+    </div>
 
-  <div class="step-card" style="border-color:var(--accent); background:var(--surface)">
-    <span class="step-num">✅</span>
-    <h3>Готово! Починай спілкування</h3>
-    <p>У веб-інтерфейсі налаштуй підключення до моделі, обери або створи сесію — і спілкуйся з Hermes Agent в реальному часі.</p>
-  </div>
-</section>
+    <div class="recording-indicator" id="recordingIndicator">
+      <span class="rec-pulse"></span>
+      <span id="recordingTime">00:00</span>
+      <button class="remove-attach" onclick="stopRecording()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:18px;">✕</button>
+    </div>
 
-<!-- ===== FEATURES ===== -->
-<section class="features-section">
-  <h2>⚙️ Можливості</h2>
-  <div class="features-grid">
-    <div class="feature-item">
-      <div class="fi-icon">💬</div>
-      <div class="fi-title">Веб-чат</div>
-      <div class="fi-desc">Повноцінний інтерфейс у браузері</div>
+    <div class="attach-preview" id="attachPreview">
+      <span class="preview-file" id="attachName"></span>
+      <button class="remove-attach" onclick="removeAttachment()">✕</button>
     </div>
-    <div class="feature-item">
-      <div class="fi-icon">📂</div>
-      <div class="fi-title">Сесії</div>
-      <div class="fi-desc">Кілька діалогів одночасно</div>
-    </div>
-    <div class="feature-item">
-      <div class="fi-icon">🎤</div>
-      <div class="fi-title">Голос</div>
-      <div class="fi-desc">Голосові повідомлення</div>
-    </div>
-    <div class="feature-item">
-      <div class="fi-icon">📎</div>
-      <div class="fi-title">Медіа</div>
-      <div class="fi-desc">Файли, зображення, аудіо</div>
-    </div>
-    <div class="feature-item">
-      <div class="fi-icon">🌐</div>
-      <div class="fi-title">REST API</div>
-      <div class="fi-desc">OpenAI-сумісний API</div>
-    </div>
-    <div class="feature-item">
-      <div class="fi-icon">📡</div>
-      <div class="fi-title">Мережа</div>
-      <div class="fi-desc">Доступ з інших пристроїв</div>
-    </div>
-  </div>
-</section>
 
-<!-- ===== QUICK LAUNCH ===== -->
-<section class="quick-section">
-  <h2>🚀 Швидкий запуск</h2>
-  <div class="quick-grid">
-    <div class="quick-item">
-      <div class="qi-icon">🚀</div>
-      <div class="qi-cmd">hurl</div>
-      <div class="qi-desc">Запустити сервер + відкрити браузер</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">💬</div>
-      <div class="qi-cmd">hchat</div>
-      <div class="qi-desc">Запустити веб-чат</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">🛑</div>
-      <div class="qi-cmd">hstop</div>
-      <div class="qi-desc">Зупинити сервер</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">📋</div>
-      <div class="qi-cmd">hstatus</div>
-      <div class="qi-desc">Статус сервера</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">📜</div>
-      <div class="qi-cmd">hlog</div>
-      <div class="qi-desc">Лог сервера</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">🔄</div>
-      <div class="qi-cmd">hupdate</div>
-      <div class="qi-desc">Оновити з GitHub</div>
-    </div>
-    <div class="quick-item" style="border-color:var(--accent)">
-      <div class="qi-icon">🏠</div>
-      <div class="qi-cmd">hshortcut</div>
-      <div class="qi-desc">Ярлик на робочий стіл Android</div>
-    </div>
-    <div class="quick-item">
-      <div class="qi-icon">⚙️</div>
-      <div class="qi-cmd">hsetup</div>
-      <div class="qi-desc">Повторне налаштування</div>
-    </div>
-  </div>
-  <div class="install-note" style="margin-top:16px">
-    <strong>💡</strong> Після встановлення просто напиши <code style="color:var(--green)">hurl</code> в Termux — сервер запуститься і браузер відкриється сам.
-  </div>
-</section>
-
-<!-- ===== WALL ===== -->
-<section class="wall-section" id="wall">
-  <h2>💬 Стіна відгуків</h2>
-
-  <div class="wall-tabs" id="wall-tabs">
-    <span class="wall-tab active" data-filter="all">Усі</span>
-    <span class="wall-tab" data-filter="5">⭐⭐⭐⭐⭐</span>
-    <span class="wall-tab" data-filter="4">⭐⭐⭐⭐</span>
-    <span class="wall-tab" data-filter="3">⭐⭐⭐</span>
-  </div>
-
-  <div id="wall-list"></div>
-
-  <div class="wall-form">
-    <h3>✍️ Залишити відгук</h3>
-    <div class="form-row">
-      <input type="text" id="review-name" placeholder="Ім'я або нікнейм" maxlength="30">
-      <input type="text" id="review-tag" placeholder="Модель (напр. deepseek, claude)" maxlength="20">
-    </div>
-    <div class="star-picker" id="star-picker">
-      <span data-v="1">☆</span>
-      <span data-v="2">☆</span>
-      <span data-v="3">☆</span>
-      <span data-v="4">☆</span>
-      <span data-v="5">☆</span>
-    </div>
-    <textarea id="review-text" placeholder="Напиши, як тобі Hermonoid..."></textarea>
-    <button onclick="submitReview()">📨 Надіслати</button>
-  </div>
-</section>
-
-<!-- ===== ABOUT (hidden by default) ===== -->
-<section class="about-section">
-  <details>
-    <summary>👤 Про автора та проєкти</summary>
-    <div class="about-content">
-      <p>Мене звати <strong>Fil-m</strong>. Я розробляю інструменти для локальних AI-агентів на Android. Hermonoid — це спосіб зробити Hermes Agent зручним для щоденного використання через браузер, без постійної роботи в CLI.</p>
-      <p style="margin-top:8px">Інші мої проєкти:</p>
-      <div class="projects">
-        <a href="https://github.com/Fil-m/hermonoid" target="_blank">📦 Hermonoid</a>
-        <a href="https://github.com/Fil-m" target="_blank">👤 GitHub Profile</a>
+    <div class="input-row">
+      <button class="attach-btn" id="attachBtn">📎</button>
+      <div class="input-area">
+        <textarea id="msgInput" rows="1"
+          placeholder="Напиши повідомлення..."
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
       </div>
     </div>
-  </details>
-</section>
+  </div>
+</div>
 
-<!-- ===== FOOTER ===== -->
-<footer>
-  <p><a href="https://github.com/Fil-m/hermonoid" target="_blank">Hermonoid</a> by <a href="https://github.com/Fil-m" target="_blank">Fil-m</a> &bull; Open Source &bull; MIT</p>
-  <p style="margin-top:4px;font-size:12px">Працює на <a href="https://hermes-agent.nousresearch.com" target="_blank">Hermes Agent</a></p>
-</footer>
+<!-- Image Viewer -->
+<div class="img-viewer" id="imgViewer" onclick="this.classList.remove('visible')">
+  <button class="close-viewer" onclick="document.getElementById('imgViewer').classList.remove('visible')">✕</button>
+  <img id="viewerImage" src="" alt="full size">
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="renameCtx()">✏️ Перейменувати</div>
+  <div class="ctx-item danger" onclick="deleteCtx()">🗑 Видалити</div>
+</div>
 
 <script>
-// ===== Copy command =====
-function copyCmd(btn) {
-  const code = document.getElementById('install-cmd');
-  navigator.clipboard.writeText(code.textContent).then(() => {
-    btn.innerHTML = '<i>✓</i> Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.innerHTML = '<i>📋</i> Copy';
-      btn.classList.remove('copied');
-    }, 2000);
-  }).catch(() => {
-    // fallback select
-    const range = document.createRange();
-    range.selectNodeContents(code);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  });
-}
+const API = window.location.origin;
+let currentSessionId = null;
+let chatHistory = [];
+let attachedFile = null;
+let mediaRecorder = null;
+let recordingChunks = [];
+let recordingTimer = null;
+let recordingSec = 0;
+let isRecording = false;
+let ctxSessionId = null;
 
-// ===== Reviews =====
-const API_BASE = 'https://hermonoid-api.fly.dev';
+// ====== СЕСІЇ ======
 
-let reviews = [];
-let currentFilter = 'all';
-let selectedStars = 0;
-
-// Load from localStorage first, then fetch from server
-function loadReviews() {
-  const stored = localStorage.getItem('hermonoid-reviews');
-  if (stored) {
-    try {
-      reviews = JSON.parse(stored);
-      renderReviews();
-    } catch(e) {}
-  }
-  fetchReviews();
-}
-
-async function fetchReviews() {
+async function loadSessions() {
   try {
-    const r = await fetch(API_BASE + '/api/reviews');
-    if (r.ok) {
-      const data = await r.json();
-      reviews = data.reviews || [];
-      localStorage.setItem('hermonoid-reviews', JSON.stringify(reviews));
-      renderReviews();
+    const resp = await fetch(API + '/api/sessions');
+    const data = await resp.json();
+    const list = document.getElementById('sessionList');
+    list.innerHTML = '';
+    for (const s of data.sessions) {
+      const div = document.createElement('div');
+      div.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+      div.setAttribute('data-id', s.id);
+
+      const ago = timeAgo(s.updated_at);
+      const msgs = s.msg_count || 0;
+
+      div.innerHTML = `
+        <div class="s-title">${escapeHtml(s.title)}</div>
+        <div class="s-meta">
+          <span>${msgs} повідомлень</span>
+          <span>•</span>
+          <span>${ago}</span>
+        </div>
+      `;
+
+      div.onclick = function(e) { switchSession(s.id); };
+      div.oncontextmenu = function(e) {
+        e.preventDefault();
+        showCtxMenu(e, s.id);
+      };
+
+      list.appendChild(div);
     }
-  } catch(e) {
-    console.log('Offline mode — using local reviews');
+  } catch (e) {
+    console.error('Failed to load sessions', e);
   }
 }
 
-async function submitReview() {
-  const name = document.getElementById('review-name').value.trim() || 'Анонім';
-  const tag = document.getElementById('review-tag').value.trim() || 'hermes';
-  const text = document.getElementById('review-text').value.trim();
-  if (!text || selectedStars === 0) {
-    alert('Будь ласка, напиши текст відгуку та обери оцінку.');
-    return;
-  }
-
-  const review = {
-    name,
-    stars: selectedStars,
-    text,
-    tag,
-    date: new Date().toISOString().split('T')[0]
-  };
-
-  // Optimistic: add locally
-  reviews.unshift(review);
-  localStorage.setItem('hermonoid-reviews', JSON.stringify(reviews));
-  renderReviews();
-
-  // Clear form
-  document.getElementById('review-text').value = '';
-  document.getElementById('review-name').value = '';
-  document.getElementById('review-tag').value = '';
-  selectedStars = 0;
-  document.querySelectorAll('#star-picker span').forEach(s => s.textContent = '☆');
-
-  // Send to server
+async function newSession() {
   try {
-    await fetch(API_BASE + '/api/reviews', {
+    const resp = await fetch(API + '/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(review)
+      body: JSON.stringify({ title: 'Новий чат' })
     });
-  } catch(e) {
-    console.log('Saved locally (server unavailable)');
+    const data = await resp.json();
+    currentSessionId = data.session_id;
+    chatHistory = [];
+    closeSidebar();
+    await switchSession(currentSessionId);
+  } catch (e) {
+    console.error('Failed to create session', e);
   }
 }
 
-function renderReviews() {
-  const list = document.getElementById('wall-list');
-  const filtered = currentFilter === 'all'
-    ? reviews
-    : reviews.filter(r => r.stars === parseInt(currentFilter));
+async function switchSession(sid) {
+  currentSessionId = sid;
+  document.getElementById('msgInput').focus();
 
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="wall-empty">💭 Ще немає відгуків. Будь першим!</div>';
-    return;
+  // Highlight in sidebar
+  document.querySelectorAll('.session-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === sid);
+  });
+
+  closeSidebar();
+
+  try {
+    const resp = await fetch(API + '/api/sessions/' + sid);
+    const data = await resp.json();
+
+    document.getElementById('chatTitle').textContent = data.session.title || 'Чат';
+    chatHistory = [];
+
+    const area = document.getElementById('chatArea');
+    area.innerHTML = '';
+
+    if (data.messages.length === 0) {
+      area.innerHTML = '<div class="msg system">💬 Новий чат. Напиши щось!</div>';
+      return;
+    }
+
+    for (const msg of data.messages) {
+      addMessage(msg.role, msg.text, msg.media || null);
+      chatHistory.push({ role: msg.role, text: msg.text });
+    }
+  } catch (e) {
+    console.error('Failed to load session', e);
   }
-
-  list.innerHTML = filtered.map(r => {
-    const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
-    const initials = r.name.substring(0, 2).toUpperCase();
-    return `
-      <div class="review-card">
-        <div class="rc-header">
-          <div class="rc-avatar">${initials}</div>
-          <div>
-            <div class="rc-name">${escHtml(r.name)}</div>
-            <div class="rc-date">${r.date || 'щойно'}</div>
-          </div>
-          <div class="rc-stars">${stars}</div>
-        </div>
-        <div class="rc-text">${escHtml(r.text)}</div>
-        <span class="rc-tag">🧠 ${escHtml(r.tag)}</span>
-      </div>
-    `;
-  }).join('');
 }
 
-function escHtml(s) {
+async function renameCurrent() {
+  const title = prompt('Нова назва чату:', document.getElementById('chatTitle').textContent);
+  if (!title || !currentSessionId) return;
+  try {
+    await fetch(API + '/api/sessions/' + currentSessionId + '/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title })
+    });
+    document.getElementById('chatTitle').textContent = title;
+    await loadSessions();
+  } catch (e) {
+    console.error('Failed to rename', e);
+  }
+}
+
+async function deleteCurrent() {
+  if (!currentSessionId) return;
+  if (!confirm('Видалити цю сесію?')) return;
+  try {
+    await fetch(API + '/api/sessions/' + currentSessionId, { method: 'DELETE' });
+    currentSessionId = null;
+    chatHistory = [];
+    document.getElementById('chatArea').innerHTML = '<div class="msg system">🤖 Сесію видалено. Обери іншу або створи нову ➕</div>';
+    document.getElementById('chatTitle').textContent = 'Hermes Chat';
+    await loadSessions();
+  } catch (e) {
+    console.error('Failed to delete', e);
+  }
+}
+
+function showCtxMenu(e, sid) {
+  ctxSessionId = sid;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('visible');
+}
+
+function renameCtx() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+  if (!ctxSessionId) return;
+  const title = prompt('Нова назва:');
+  if (!title) return;
+  fetch(API + '/api/sessions/' + ctxSessionId + '/rename', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: title })
+  }).then(() => loadSessions());
+}
+
+function deleteCtx() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+  if (!ctxSessionId) return;
+  if (!confirm('Видалити цю сесію?')) return;
+  fetch(API + '/api/sessions/' + ctxSessionId, { method: 'DELETE' })
+    .then(() => {
+      if (ctxSessionId === currentSessionId) {
+        currentSessionId = null;
+        document.getElementById('chatArea').innerHTML = '<div class="msg system">🤖 Сесію видалено</div>';
+        document.getElementById('chatTitle').textContent = 'Hermes Chat';
+      }
+      return loadSessions();
+    });
+}
+
+document.addEventListener('click', function() {
+  document.getElementById('ctxMenu').classList.remove('visible');
+});
+
+// ====== ЧАТ ======
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMsg();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function addMessage(role, text, media) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  const label = document.createElement('div');
+  label.className = 'label ' + (role === 'user' ? 'user-label' : role === 'hermes' ? 'hermes-label' : '');
+  if (role === 'user') label.textContent = 'Ти';
+  else if (role === 'hermes' || role === 'assistant') label.textContent = 'Hermes';
+  div.appendChild(label);
+
+  const content = document.createElement('div');
+  content.innerHTML = formatMessage(text);
+  div.appendChild(content);
+
+  if (media) {
+    const wrap = document.createElement('div');
+    wrap.className = 'media-attachment';
+    if (media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = media.data;
+      img.alt = media.name || 'img';
+      img.onclick = function() {
+        document.getElementById('viewerImage').src = this.src;
+        document.getElementById('imgViewer').classList.add('visible');
+      };
+      wrap.appendChild(img);
+    } else if (media.type === 'audio') {
+      const audio = document.createElement('audio');
+      audio.controls = true; audio.src = media.data;
+      wrap.appendChild(audio);
+    } else if (media.type === 'file') {
+      const link = document.createElement('div');
+      link.style.cssText = 'padding:6px 10px;background:rgba(0,0,0,0.2);border-radius:8px;font-size:12px;';
+      link.textContent = '📎 ' + (media.name || 'файл');
+      wrap.appendChild(link);
+    }
+    div.appendChild(wrap);
+  }
+
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function formatMessage(text) {
+  if (!text) return '';
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function showTyping() {
+  const area = document.getElementById('chatArea');
+  if (document.getElementById('typingIndicator')) return;
+  const div = document.createElement('div');
+  div.className = 'typing'; div.id = 'typingIndicator';
+  div.innerHTML = '<span>Hermes</span><div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function setWaiting(w) {
+  isWaiting = w;
+  document.getElementById('sendBtn').disabled = w;
+  document.getElementById('msgInput').disabled = w;
+}
+let isWaiting = false;
+
+async function sendMsg() {
+  if (isWaiting) return;
+
+  // Якщо нема сесії — створити
+  if (!currentSessionId) {
+    await newSession();
+    // Чекаємо поки створиться
+    if (!currentSessionId) return;
+  }
+
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text && !attachedFile) return;
+
+  input.value = ''; input.style.height = 'auto';
+  const media = attachedFile;
+  removeAttachment();
+  closeAttachMenu();
+
+  addMessage('user', text || '📎 медіа', media);
+  chatHistory.push({ role: 'user', text: text || '' });
+
+  showTyping(); setWaiting(true);
+
+  try {
+    const payload = {
+      message: text || '',
+      session_id: currentSessionId,
+      history: chatHistory.slice(-20)
+    };
+    if (media) {
+      payload.media = { type: media.type, name: media.name, mime: media.mime, data: media.data };
+    }
+
+    const resp = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    hideTyping();
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      addMessage('hermes', '❌ ' + err);
+      chatHistory.push({ role: 'assistant', text: '❌ ' + err });
+    } else {
+      const data = await resp.json();
+      addMessage('hermes', data.response || '...');
+      chatHistory.push({ role: 'assistant', text: data.response || '' });
+      // Оновити назву в сайдбарі
+      await loadSessions();
+      // Оновити заголовок
+      document.getElementById('chatTitle').textContent =
+        document.querySelector('.session-item.active .s-title')?.textContent || 'Hermes Chat';
+    }
+  } catch (e) {
+    hideTyping();
+    addMessage('hermes', '❌ Помилка: ' + e.message);
+    chatHistory.push({ role: 'assistant', text: '❌ ' + e.message });
+  }
+
+  setWaiting(false);
+  input.focus();
+}
+
+function insertText(text) {
+  const input = document.getElementById('msgInput');
+  input.value = text;
+  input.focus(); autoResize(input);
+  input.setSelectionRange(text.length, text.length);
+}
+
+// ====== ВКЛАДЕННЯ ======
+
+// Прямий вибір файлу при натисканні скріпки
+document.addEventListener('DOMContentLoaded', function() {
+  const attachBtn = document.getElementById('attachBtn');
+  const msgInput = document.getElementById('msgInput');
+  if (!attachBtn) { console.error('❌ attachBtn not found'); return; }
+
+  // Створюємо прихований input для файлів
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.style.display = 'none';
+  fileInput.accept = 'image/*,audio/*,.pdf,.doc,.docx,.txt,.zip';
+  document.body.appendChild(fileInput);
+
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    const type = file.type.startsWith('image/') ? 'image' :
+                 file.type.startsWith('audio/') ? 'audio' : 'file';
+    reader.onload = function(ev) {
+      attachedFile = {
+        type: type,
+        name: file.name,
+        mime: file.type || 'application/octet-stream',
+        data: ev.target.result
+      };
+      document.getElementById('attachName').textContent =
+        (type === 'image' ? '🖼' : type === 'audio' ? '🎤' : '📎') + ' ' + file.name;
+      document.getElementById('attachPreview').classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = '';
+  });
+
+  attachBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('📎 натиснуто');
+    fileInput.click();
+  });
+
+  attachBtn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    fileInput.click();
+  });
+
+  // Закривати прев'ю по кліку на ✕
+  document.querySelector('.remove-attach')?.addEventListener('click', function() {
+    attachedFile = null;
+    document.getElementById('attachPreview').classList.remove('visible');
+  });
+});
+
+function closeAttachMenu() {}
+
+function removeAttachment() {
+  attachedFile = null;
+  document.getElementById('attachPreview').classList.remove('visible');
+}
+
+function attachPhoto() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: 'image/jpeg', data: ev.target.result}, 'image'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+function attachGallery() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'image'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+function attachAudio() {
+  if (isRecording) { stopRecording(); return; }
+  startRecording();
+}
+
+async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia) { alert('Голос не підтримується'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    recordingChunks = []; recordingSec = 0; isRecording = true;
+
+    mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) recordingChunks.push(e.data); };
+    mediaRecorder.onstop = function() {
+      stream.getTracks().forEach(t => t.stop()); isRecording = false; clearInterval(recordingTimer);
+      const blob = new Blob(recordingChunks, { type: 'audio/webm' });
+      if (blob.size < 100) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: 'voice.webm', type: 'audio/webm', data: ev.target.result}, 'audio'); };
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+    document.getElementById('recordingIndicator').classList.add('visible');
+    document.getElementById('attachBtn').textContent = '⏹';
+    closeAttachMenu();
+
+    recordingTimer = setInterval(function() {
+      recordingSec++;
+      const m = String(Math.floor(recordingSec / 60)).padStart(2, '0');
+      const s = String(recordingSec % 60).padStart(2, '0');
+      document.getElementById('recordingTime').textContent = m + ':' + s;
+    }, 1000);
+  } catch (e) { alert('Мікрофон: ' + e.message); }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  document.getElementById('recordingIndicator').classList.remove('visible');
+  document.getElementById('attachBtn').textContent = '📎';
+  isRecording = false; clearInterval(recordingTimer);
+}
+
+function attachFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'image'); };
+      reader.readAsDataURL(file); return;
+    }
+    if (file.type.startsWith('audio/')) {
+      const reader = new FileReader();
+      reader.onload = function(ev) { showAttachment({name: file.name, type: file.type, data: ev.target.result}, 'audio'); };
+      reader.readAsDataURL(file); return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) { showAttachment({name: file.name, type: file.type || 'application/octet-stream', data: ev.target.result}, 'file'); };
+    reader.readAsDataURL(file);
+  }; input.click();
+}
+
+// ====== ЕКСПОРТ ======
+
+function exportChat() {
+  if (chatHistory.length === 0) { alert('Немає повідомлень'); return; }
+  const text = chatHistory.map(m => {
+    let t = '**' + (m.role === 'user' ? 'Ти' : 'Hermes') + ':**\n' + m.text;
+    return t;
+  }).join('\n\n---\n\n');
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hermes-chat-' + new Date().toISOString().slice(0, 19) + '.md';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ====== САЙДБАР ======
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('visible');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+}
+
+// ====== УТИЛІТИ ======
+
+function escapeHtml(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
 }
 
-// Star picker
-document.getElementById('star-picker').addEventListener('click', function(e) {
-  if (e.target.tagName === 'SPAN' && e.target.dataset.v) {
-    selectedStars = parseInt(e.target.dataset.v);
-    this.querySelectorAll('span').forEach((s, i) => {
-      s.textContent = i < selectedStars ? '★' : '☆';
-    });
-  }
-});
+function timeAgo(ts) {
+  const diff = Date.now()/1000 - ts;
+  if (diff < 60) return 'щойно';
+  if (diff < 3600) return Math.floor(diff/60) + 'хв';
+  if (diff < 86400) return Math.floor(diff/3600) + 'год';
+  return Math.floor(diff/86400) + 'д';
+}
 
-// Tab switching
-document.getElementById('wall-tabs').addEventListener('click', function(e) {
-  if (e.target.classList.contains('wall-tab')) {
-    this.querySelectorAll('.wall-tab').forEach(t => t.classList.remove('active'));
-    e.target.classList.add('active');
-    currentFilter = e.target.dataset.filter;
-    renderReviews();
-  }
-});
+// ====== СТАРТ ======
 
-// Init
-loadReviews();
+loadSessions();
+
+// Періодичне оновлення списку
+setInterval(loadSessions, 10000);
 </script>
 </body>
 </html>
