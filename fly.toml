@@ -1,0 +1,9 @@
+[fly_platform]
+  app = 'hermonoid-api'
+  runtime = 'python3'
+  command = 'python scripts/reviews_api.py'
+  [env]
+    PORT = '8000'
+  [[services]]
+    port = 8000
+    handlers = ['http']
