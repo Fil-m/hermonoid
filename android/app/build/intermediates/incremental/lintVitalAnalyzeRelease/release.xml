@@ -2,11 +2,11 @@
     name="release"
     package="com.hermonoid.app"
     minSdkVersion="26"
-    targetSdkVersion="34"
+    targetSdkVersion="35"
     mergedManifest="build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml"
-    proguardFiles="build/python/proguard-rules.pro"
+    proguardFiles="build/python/proguard-rules.pro:build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.7.3:proguard-rules.pro"
     partialResultsDir="build/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out"
-    desugaredMethodsFiles="/root/.gradle/caches/transforms-4/a8134a0ee666a9e6d622dd301241c64c/transformed/D8BackportedDesugaredMethods.txt">
+    desugaredMethodsFiles="/root/.gradle/caches/8.9/transforms/1df81c9289eb14998abc550d9dde26f8/transformed/D8BackportedDesugaredMethods.txt">
   <buildFeatures
       namespacing="REQUIRED"/>
   <sourceProviders>
@@ -26,6 +26,6 @@
       applicationId="com.hermonoid.app"
       generatedSourceFolders="build/python/proxies/release:build/generated/ap_generated_sources/release/out"
       generatedResourceFolders="build/generated/res/resValues/release"
-      desugaredMethodsFiles="/root/.gradle/caches/transforms-4/a8134a0ee666a9e6d622dd301241c64c/transformed/D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="/root/.gradle/caches/8.9/transforms/1df81c9289eb14998abc550d9dde26f8/transformed/D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

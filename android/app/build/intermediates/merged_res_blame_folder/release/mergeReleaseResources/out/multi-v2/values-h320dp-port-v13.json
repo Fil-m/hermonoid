@@ -4,7 +4,7 @@
             "outputFile": "com.hermonoid.app-mergeReleaseResources-31:/values-h320dp-port-v13/values-h320dp-port-v13.xml",
             "map": [
                 {
-                    "source": "/root/.gradle/caches/transforms-4/a6f5ec55c6aa9cbf7a74d975b8684c6e/transformed/material-1.11.0/res/values-h320dp-port-v13/values-h320dp-port-v13.xml",
+                    "source": "/root/.gradle/caches/8.9/transforms/52dbb66c88a6c174aa2abe376200d7b3/transformed/material-1.12.0/res/values-h320dp-port-v13/values-h320dp-port-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

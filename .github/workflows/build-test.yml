@@ -1,0 +1,106 @@
+name: Build & Test Hermonoid APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermonoid-v4-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: List AVD targets
+        run: |
+          echo "Available images:"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list 2>/dev/null | grep "system-images.*android-3[4-9].*arm64" | head -10
+
+      - name: Create AVD
+        run: |
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;arm64-v8a" 2>&1
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "emulator" 2>&1
+          echo "Creating AVD..."
+          echo no | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd             -n HermonoidTest             -k "system-images;android-34;google_apis;arm64-v8a"             -d pixel_6             -f
+
+      - name: Start Emulator
+        timeout-minutes: 10
+        run: |
+          $ANDROID_HOME/emulator/emulator             -avd HermonoidTest             -no-window             -no-audio             -gpu swiftshader_indirect             -memory 2048             -no-snapshot             -read-only &
+          
+          # Wait for boot
+          echo "Waiting for emulator to boot..."
+          adb wait-for-device
+          adb shell settings put global window_animation_scale 0.0
+          adb shell settings put global transition_animation_scale 0.0
+          adb shell settings put global animator_duration_scale 0.0
+          
+          # Wait for boot complete
+          for i in $(seq 1 120); do
+            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            if [ "$BOOT" = "1" ]; then
+              echo "Emulator booted! ($i seconds)"
+              break
+            fi
+            sleep 2
+          done
+          
+          adb shell input keyevent 82  # Unlock
+
+      - name: Install and Test APK
+        timeout-minutes: 5
+        run: |
+          echo "Installing APK..."
+          adb install android/app/build/outputs/apk/release/app-release.apk
+          echo "APK installed!"
+          
+          # Wait for app to start
+          sleep 15
+          
+          # Check if app is running
+          echo "=== Logcat ==="
+          adb logcat -d | grep -i "hermonoid\|TermuxInstaller\|hermes" | tail -30 || echo "No Hermonoid logs found"
+          
+          # Check if process is running
+          echo "=== Process ==="
+          adb shell ps | grep -i hermonoid || echo "Process not running"
+          
+          # Check Termux extraction
+          echo "=== Files ==="
+          adb shell ls -la /data/data/com.hermonoid.app/files/termux-prefix/.setup_done 2>/dev/null || echo "Setup marker not found"
+          adb shell ls /data/data/com.hermonoid.app/files/termux-prefix/bin/bash 2>/dev/null || echo "bash not found"
+          
+          # Check HTTP server
+          echo "=== HTTP Server ==="
+          adb shell curl -s http://127.0.0.1:8080/api/status 2>/dev/null || echo "Server not responding"
+          
+          echo "=== DONE ==="
+
+      - name: Send notification on failure
+        if: failure()
+        run: |
+          echo "APK build or test failed!"

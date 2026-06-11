@@ -1,32 +1,27 @@
-# Hermonoid .gitignore
-
-# Бази даних
-*.db
-*.db-*
-
-# Логи
-*.log
-
-# Конфігурація (ключі)
-.env
-config/*.key
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+local.properties
+build/
+.idea/
+*.iml
+.gradle/
+*.keystore
+!hermonoid-release.keystore
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.venv/
+*.pyc
+*.pyo
+.env
 venv/
-
-# VS Code
-.vscode/
+.venv/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# IDE
-.idea/
-*.swp
-*.swo
+# Hermes
+.hermes/

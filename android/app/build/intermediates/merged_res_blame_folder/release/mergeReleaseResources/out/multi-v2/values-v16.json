@@ -4,7 +4,7 @@
             "outputFile": "com.hermonoid.app-mergeReleaseResources-31:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "/root/.gradle/caches/transforms-4/12c1cad82af716083ba6f4bd5e041669/transformed/appcompat-1.6.1/res/values-v16/values-v16.xml",
+                    "source": "/root/.gradle/caches/8.9/transforms/16522f80b13180471916981ca649631a/transformed/appcompat-1.7.0/res/values-v16/values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -12,24 +12,6 @@
                         "endLines": "5",
                         "endColumns": "12",
                         "endOffsets": "223"
-                    },
-                    "to": {
-                        "startLines": "3",
-                        "startColumns": "4",
-                        "startOffsets": "121",
-                        "endLines": "6",
-                        "endColumns": "12",
-                        "endOffsets": "289"
-                    }
-                },
-                {
-                    "source": "/root/.gradle/caches/transforms-4/2b25a1d1a094ff5985ce9c18e169c51c/transformed/core-1.9.0/res/values-v16/values-v16.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endColumns": "65",
-                        "endOffsets": "116"
                     }
                 }
             ]

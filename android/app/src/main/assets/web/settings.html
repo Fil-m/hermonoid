@@ -19,8 +19,9 @@
   .field { margin-bottom: 14px; }
   .field:last-child { margin-bottom: 0; }
   .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
-  .field input, .field select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field input, .field select, .field textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
   .field .hint { font-size: 11px; color: var(--text2); margin-top: 3px; }
   .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
   .btn-primary { background: var(--accent); color: white; }
@@ -30,13 +31,39 @@
   .badge-off { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; background:rgba(233,69,96,0.2); color:var(--accent); }
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--success); color:white; padding:10px 24px; border-radius:8px; font-size:14px; z-index:100; opacity:0; transition:opacity 0.3s; pointer-events:none; }
   .toast.show { opacity:1; } .toast.error { background:var(--accent); }
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 120px; text-align: center; }
+  .stat-card .stat-value { font-size: 18px; font-weight: 700; color: var(--text); }
+  .stat-card .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
 </style>
 </head>
 <body>
 <div class="header"><h1>⚙️ Налаштування</h1><a href="/">← Назад</a></div>
 <div class="container">
+
+  <!-- Status -->
   <div class="section">
-    <div class="section-title">🔑 API Ключ (gonka)</div>
+    <div class="section-title">📊 Статус</div>
+    <div class="section-body">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-value" id="statHermes">🤖</div>
+          <div class="stat-label">Hermes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statTermux">⚠️</div>
+          <div class="stat-label">Termux</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPython">-</div>
+          <div class="stat-label">Python</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔑 API Ключ</div>
     <div class="section-body">
       <div class="field">
         <label>API ключ</label>
@@ -52,16 +79,18 @@
       </div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">🌐 API URL</div>
     <div class="section-body">
       <div class="field">
         <label>Base URL</label>
         <input type="text" id="baseUrl" placeholder="https://proxy.gonka.gg/v1">
-        <div class="hint">OpenAI-сумісний API ендпоінт (gonka, openrouter тощо)</div>
+        <div class="hint">OpenAI-сумісний API ендпоінт (gonka, openrouter, deepseek тощо)</div>
       </div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">🤖 Модель</div>
     <div class="section-body">
@@ -71,19 +100,37 @@
       </div>
     </div>
   </div>
+
+  <div class="section">
+    <div class="section-title">⚙️ Розширені налаштування</div>
+    <div class="section-body">
+      <div class="field">
+        <label>System Prompt</label>
+        <textarea id="systemPrompt" placeholder="System prompt для агента..."></textarea>
+        <div class="hint">Визначає поведінку AI агента</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="savePrompt()">💾 Зберегти</button>
+        <button class="btn btn-secondary" onclick="resetPrompt()">↩️ Скинути</button>
+      </div>
+    </div>
+  </div>
+
   <div class="section">
     <div class="section-title">ℹ️ Про додаток</div>
     <div class="section-body">
       <div style="font-size:13px;color:var(--text2);line-height:1.6;">
-        <strong>Hermonoid v3 — Self-Contained</strong><br>
-        Python + веб-інтерфейс всередині APK.<br>
-        Працює з gonka, OpenRouter, будь-яким OpenAI API.<br>
+        <strong>Hermonoid v4</strong> — AI Agent + Termux + WebView<br>
+        Python 3.12 + повноцінний Termux всередині APK.<br>
+        Працює з будь-яким OpenAI-сумісним API.<br>
         Сесії та історія зберігаються локально.
       </div>
     </div>
   </div>
+
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
 const API = window.location.origin;
 
@@ -91,20 +138,50 @@ async function loadConfig() {
   try {
     const r = await fetch(API + '/api/config');
     const d = await r.json();
-    document.getElementById('keyStatus').innerHTML = d.api_key
+    document.getElementById('keyStatus').innerHTML = d.key_set
       ? '<span class="badge-ok">🔒 Ключ збережено</span>'
       : '<span class="badge-off">⚠️ Ключ не налаштовано</span>';
     document.getElementById('baseUrl').value = d.base_url || 'https://proxy.gonka.gg/v1';
+    document.getElementById('systemPrompt').value = d.system_prompt || '';
     const sel = document.getElementById('modelSelect');
     sel.innerHTML = '';
-    for (const m of (d.models || [])) {
-      const o = document.createElement('option');
-      o.value = m.id;
-      o.textContent = m.name + (m.free ? ' 🆓' : '');
-      if (m.id === d.model) o.selected = true;
-      sel.appendChild(o);
+
+    // Load models from API
+    try {
+      const mr = await fetch(API + '/api/models');
+      const md = await mr.json();
+      for (const m of (md.models || [])) {
+        const o = document.createElement('option');
+        o.value = m.id;
+        o.textContent = m.name + ' (' + m.provider + ')';
+        if (m.id === d.model) o.selected = true;
+        sel.appendChild(o);
+      }
+    } catch(e) {
+      // Fallback if models endpoint fails
+      const fallbacks = [
+        {id:'deepseek/deepseek-v4-flash', name:'DeepSeek V4 Flash', provider:'DeepSeek'},
+        {id:'qwen/Qwen3-235B-A22B-Instruct-2507-FP8', name:'Qwen3 235B', provider:'Gonka'},
+        {id:'moonshotai/Kimi-K2.6', name:'Kimi K2.6', provider:'Gonka'},
+      ];
+      for (const m of fallbacks) {
+        const o = document.createElement('option');
+        o.value = m.id; o.textContent = m.name + ' (' + m.provider + ')';
+        if (m.id === d.model) o.selected = true;
+        sel.appendChild(o);
+      }
     }
   } catch(e) { console.error(e); }
+}
+
+async function loadStatus() {
+  try {
+    const r = await fetch(API + '/api/status');
+    const d = await r.json();
+    document.getElementById('statHermes').textContent = d.status === 'ok' ? '✅' : '❌';
+    document.getElementById('statTermux').textContent = d.termux_ready ? '✅' : '⚠️';
+    document.getElementById('statPython').textContent = d.python_version || '-';
+  } catch(e) {}
 }
 
 async function saveKey() {
@@ -143,6 +220,26 @@ async function saveModel() {
   } catch(e) { showToast('❌ '+e.message, true); }
 }
 
+async function savePrompt() {
+  const sp = document.getElementById('systemPrompt').value.trim();
+  try {
+    await fetch(API + '/api/settings', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({system_prompt: sp}) });
+    showToast('✅ System prompt збережено');
+  } catch(e) { showToast('❌ '+e.message, true); }
+}
+
+async function resetPrompt() {
+  try {
+    await fetch(API + '/api/settings', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({system_prompt: ''}) });
+    document.getElementById('systemPrompt').value = '';
+    showToast('✅ Скинуто');
+  } catch(e) { showToast('❌ '+e.message, true); }
+}
+
 function toggleKey() {
   const i = document.getElementById('apiKey');
   i.type = i.type === 'password' ? 'text' : 'password';
@@ -158,6 +255,7 @@ function showToast(msg, err) {
 document.getElementById('modelSelect').addEventListener('change', saveModel);
 document.getElementById('baseUrl').addEventListener('change', saveModel);
 loadConfig();
+loadStatus();
 </script>
 </body>
 </html>

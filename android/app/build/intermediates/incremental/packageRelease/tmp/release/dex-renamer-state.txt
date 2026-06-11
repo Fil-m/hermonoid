@@ -1,4 +1,4 @@
-#Thu Jun 11 11:49:05 UTC 2026
+#Thu Jun 11 16:25:58 UTC 2026
 base.0=/root/hermonoid/android/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
 path.0=classes.dex
 renamed.0=classes.dex

@@ -5,19 +5,36 @@ plugins {
 
 android {
     namespace 'com.hermonoid.app'
-    compileSdk 34
+    compileSdk 35
+
+    aaptOptions {
+        // Allow large assets (30MB Termux bootstrap)
+        ignoreAssetsPattern "!.hermes-project:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
+        cruncherEnabled = false
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../hermonoid-release.keystore')
+            storePassword 'hermonoid2026'
+            keyAlias 'hermonoid'
+            keyPassword 'hermonoid2026'
+        }
+    }
 
     defaultConfig {
         applicationId 'com.hermonoid.app'
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode 1
-        versionName '3.0.0'
+        versionName '4.0.0'
 
         python {
             buildPython "/usr/bin/python3"
+            version = "3.12"
             pip {
                 install "requests"
+                install "openai"
             }
         }
 
@@ -29,6 +46,8 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
@@ -45,8 +64,8 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.webkit:webkit:1.9.0'
-    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }

@@ -318,7 +318,8 @@
   <div class="topbar">
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <h2 id="chatTitle">Hermes Chat</h2>
-    <span class="model-badge">deepseek</span>
+    <span class="model-badge" id="modelBadge">deepseek</span>
+    <span class="model-badge" id="termuxBadge" style="background: rgba(46,204,113,0.2); color: #2ecc71; display: none;">🐧 Termux</span>
     <button class="icon-btn" onclick="renameCurrent()" title="Перейменувати">✏️</button>
     <button class="icon-btn" onclick="exportChat()" title="Експорт">📥</button>
     <button class="icon-btn" onclick="deleteCurrent()" title="Видалити">🗑</button>
@@ -906,10 +907,35 @@ function timeAgo(ts) {
 
 // ====== СТАРТ ======
 
-loadSessions();
+async function checkStatus() {
+  try {
+    const r = await fetch(API + '/api/status');
+    const d = await r.json();
+    const badge = document.getElementById('termuxBadge');
+    if (d.termux_ready) {
+      badge.style.display = 'inline-block';
+      badge.textContent = '🐧 Termux';
+    } else {
+      badge.style.display = 'inline-block';
+      badge.style.background = 'rgba(233,69,96,0.2)';
+      badge.style.color = '#e94560';
+      badge.textContent = '⚠️ Termux';
+    }
+    if (d.model) {
+      document.getElementById('modelBadge').textContent = d.model;
+    }
+    if (d.python_version) {
+      document.getElementById('modelBadge').textContent += ' 🐍' + d.python_version;
+    }
+  } catch(e) {}
+}
 
-// Періодичне оновлення списку
+loadSessions();
+checkStatus();
+
+// Періодичне оновлення списку + статусу
 setInterval(loadSessions, 10000);
+setInterval(checkStatus, 30000);
 </script>
 </body>
 </html>
