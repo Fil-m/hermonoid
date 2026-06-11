@@ -22,7 +22,7 @@ else
     echo -e "${YELLOW}⟳${NC} Запускаю сервер Hermonoid..."
     pkill -f "server.py" 2>/dev/null || true
     sleep 1
-    nohup python3 server/server.py > /tmp/hermonoid.log 2>&1 &
+    nohup python3 server/server.py > "$DIR/server.log" 2>&1 &
     PID=$!
     
     # Чекаємо готовності

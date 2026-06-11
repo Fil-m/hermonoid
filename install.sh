@@ -84,14 +84,16 @@ cat > "$HOME/.shortcuts/hermonoid.sh" << 'WIDGET'
 cd ~/hermonoid
 pkill -f "server.py" 2>/dev/null || true
 sleep 1
-nohup python3 server/server.py > /tmp/hermonoid.log 2>&1 &
+LOG="$HOME/hermonoid/server.log"
+nohup python3 server/server.py > "$LOG" 2>&1 &
 for i in 1 2 3 4 5; do
     sleep 1
     if curl -s http://localhost:8080/api/status > /dev/null 2>&1; then
         break
     fi
 done
-termux-open-url "http://localhost:8080"
+am start -a android.intent.action.VIEW -d "http://localhost:8080" 2>/dev/null
+termux-open-url "http://localhost:8080" 2>/dev/null
 WIDGET
 chmod +x "$HOME/.shortcuts/hermonoid.sh"
 echo -e "  ${GREEN}✓${NC} Скрипт hermonoid.sh створено"
