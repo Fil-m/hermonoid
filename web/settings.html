@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Налаштування Hermes</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --text: #eee;
+    --text2: #aaa;
+    --border: #2a2a4a;
+    --success: #2ecc71;
+    --warning: #f39c12;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header h1 { font-size: 18px; flex: 1; }
+  .header .back-btn {
+    background: var(--surface2);
+    border: none;
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .header .back-btn:hover { background: var(--accent); }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-title {
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-body {
+    padding: 16px 18px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field textarea {
+    min-height: 80px;
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+  }
+  .field .hint {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+  .field-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .field-row input { flex: 1; }
+  .field-row .current-val {
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 200px;
+    text-overflow: ellipsis;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .btn-secondary:hover { background: var(--accent); }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge-ok { background: rgba(46,204,113,0.2); color: var(--success); }
+  .badge-off { background: rgba(233,69,96,0.2); color: var(--accent); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--accent); }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--border);
+    border-radius: 24px;
+    transition: 0.3s;
+  }
+  .slider:before {
+    content: "";
+    position: absolute;
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider:before { transform: translateX(20px); }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+  .toggle-row .label { font-size: 14px; }
+  .toggle-row .desc { font-size: 12px; color: var(--text2); }
+
+  .key-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 12px; }
+    .field-row { flex-direction: column; align-items: stretch; }
+    .field-row .current-val { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="back-btn">← Чат</a>
+  <h1>⚙️ Налаштування Hermes</h1>
+</div>
+
+<div class="container">
+
+  <!-- СТАТУС -->
+  <div class="section">
+    <div class="section-title">📊 Статус</div>
+    <div class="section-body" id="statusSection">
+      <div class="field-row" style="margin-bottom:8px">
+        <span>Hermes CLI:</span>
+        <span id="hermesStatus" class="status-badge badge-off">Перевірка...</span>
+      </div>
+      <div class="field-row">
+        <span>Версія:</span>
+        <span id="hermesVersion" style="color:var(--text2);font-size:13px">...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДЕЛЬ ТА ПРОВАЙДЕР -->
+  <div class="section">
+    <div class="section-title">🧠 Модель та провайдер</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Провайдер</label>
+        <select id="providerSelect">
+          <option value="deepseek">DeepSeek</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="together">Together AI</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Модель</label>
+        <select id="modelSelect"></select>
+      </div>
+      <div class="field">
+        <label>Base URL</label>
+        <input type="text" id="baseUrlInput" placeholder="https://api.deepseek.com">
+        <div class="hint">Автоматично змінюється при виборі провайдера. Можна ввести свій.</div>
+      </div>
+      <div class="field">
+        <label>API Ключ</label>
+        <div class="field-row">
+          <input type="password" id="apiKeyInput" placeholder="Введіть API ключ">
+          <button class="btn btn-secondary" id="toggleKeyBtn" style="padding:8px 12px;font-size:12px">👁</button>
+        </div>
+        <div id="currentApiKey" class="hint" style="margin-top:4px"></div>
+        <div class="hint">Зберігається як змінна оточення в ~/.bashrc</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="saveModelBtn">💾 Зберегти модель</button>
+        <button class="btn btn-secondary" id="testModelBtn">🧪 Перевірити</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПЕРСОНАЛІЯ -->
+  <div class="section">
+    <div class="section-title">🎭 Персоналія (тон спілкування)</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Стиль відповідей</label>
+        <select id="personalitySelect">
+          <option value="helpful">🤗 Дружній</option>
+          <option value="concise">🎯 Лаконічний</option>
+          <option value="technical">🔧 Технічний</option>
+          <option value="creative">🎨 Креативний</option>
+          <option value="teacher">📚 Вчитель</option>
+          <option value="kawaii">🌸 Kawaii</option>
+          <option value="catgirl">🐱 Catgirl</option>
+          <option value="pirate">🏴‍☠️ Пірат</option>
+          <option value="shakespeare">🎭 Шекспір</option>
+          <option value="surfer">🏄 Серфер</option>
+          <option value="noir">🕵️‍♂️ Нуар</option>
+          <option value="uwu">UwU</option>
+          <option value="philosopher">🧠 Філософ</option>
+          <option value="hype">🔥 Hype</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- СЕРВЕР -->
+  <div class="section">
+    <div class="section-title">🌐 Сервер</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Порт</label>
+        <input type="number" id="portInput" placeholder="8080" min="1024" max="65535">
+        <div class="hint">Зміна порту потребує перезапуску сервера</div>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="label">Автозапуск</div>
+          <div class="desc">Hermonoid стартуватиме при кожному вході в Termux</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="autoStartToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- API КЛЮЧІ HERMONOID -->
+  <div class="section">
+    <div class="section-title">🔑 API ключі Hermonoid (для зовнішніх програм)</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Поточні ключі</label>
+        <div id="hermonoidKeys">Завантаження...</div>
+      </div>
+      <div class="field">
+        <label>Додати новий ключ</label>
+        <div class="field-row">
+          <input type="text" id="newApiKeyInput" placeholder="Новий ключ">
+          <button class="btn btn-secondary" id="addApiKeyBtn" style="padding:8px 16px;font-size:12px">+ Додати</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПРО HERMONOID -->
+  <div class="section">
+    <div class="section-title">ℹ️ Про Hermonoid</div>
+    <div class="section-body">
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">
+        <p><b>Hermonoid</b> — веб-чат та REST API для Hermes Agent на Android.</p>
+        <p>Версія: 1.0.0 · <a href="https://github.com/Fil-m/hermonoid" target="_blank" style="color:var(--accent)">GitHub</a></p>
+        <p style="margin-top:8px">Конфіг Hermes: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">~/.hermes/config.yaml</code></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" style="justify-content:center;margin-top:8px;margin-bottom:32px">
+    <button class="btn btn-secondary" id="restartServerBtn">🔄 Перезапустити сервер</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type': 'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const resp = await fetch(API + path, opts);
+  return await resp.json();
+}
+
+function toast(msg, error=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// === ЗАВАНТАЖЕННЯ ===
+async function loadSettings() {
+  try {
+    const data = await api('/api/settings');
+    if (!data || data.error) { toast('Помилка завантаження', true); return; }
+
+    // Статус
+    const statusEl = document.getElementById('hermesStatus');
+    const versionEl = document.getElementById('hermesVersion');
+    if (data.hermes_available) {
+      statusEl.textContent = '✅ Працює';
+      statusEl.className = 'status-badge badge-ok';
+    } else {
+      statusEl.textContent = '❌ Не знайдено';
+      statusEl.className = 'status-badge badge-off';
+    }
+    versionEl.textContent = data.version || '?';
+
+    // Модель
+    const cfg = data.config || {};
+    const providerSelect = document.getElementById('providerSelect');
+    const modelSelect = document.getElementById('modelSelect');
+    const baseUrlInput = document.getElementById('baseUrlInput');
+
+    // Поточний провайдер
+    const currentProvider = cfg['model.provider'] || 'deepseek';
+    const currentModel = cfg['model.default'] || 'deepseek-chat';
+    const currentBaseUrl = cfg['model.base_url'] || '';
+
+    providerSelect.value = currentProvider;
+
+    // Заповнити моделі
+    if (data.models && data.models.length) {
+      // Фільтруємо по провайдеру
+      const filtered = data.models.filter(m => m.provider === currentProvider);
+      modelSelect.innerHTML = '';
+      filtered.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        if (m.id === currentModel) opt.selected = true;
+        modelSelect.appendChild(opt);
+      });
+    }
+
+    baseUrlInput.value = currentBaseUrl ||
+      (data.providers || []).find(p => p.id === currentProvider)?.base_url || '';
+
+    // API ключ
+    const keyEl = document.getElementById('currentApiKey');
+    if (data.api_key) {
+      keyEl.textContent = '🔑 ' + data.api_key.key + ': ' + data.api_key.value;
+    } else {
+      keyEl.textContent = '⚠️ API ключ не знайдено';
+    }
+
+    // Порт
+    document.getElementById('portInput').value = data.server_port || 8080;
+
+    // Автозапуск
+    const autoEl = document.getElementById('autoStartToggle');
+    try {
+      const rc = await api('/api/exec', 'POST', {cmd: 'grep -q "hermonoid" ~/.bashrc && echo "yes" || echo "no"'});
+      autoEl.checked = rc.output?.includes('yes');
+    } catch { autoEl.checked = false; }
+
+  } catch(e) {
+    toast('Помилка: ' + e.message, true);
+  }
+}
+
+// === ЗМІНА ПРОВАЙДЕРА ===
+document.getElementById('providerSelect').addEventListener('change', async function() {
+  const provider = this.value;
+  const data = await api('/api/settings');
+  if (!data.models) return;
+
+  const modelSelect = document.getElementById('modelSelect');
+  const filtered = data.models.filter(m => m.provider === provider);
+  modelSelect.innerHTML = '';
+  filtered.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
+    modelSelect.appendChild(opt);
+  });
+
+  const prov = (data.providers || []).find(p => p.id === provider);
+  if (prov) {
+    document.getElementById('baseUrlInput').value = prov.base_url;
+  }
+});
+
+// === ЗБЕРЕГТИ МОДЕЛЬ ===
+document.getElementById('saveModelBtn').addEventListener('click', async function() {
+  this.disabled = true;
+  this.textContent = '⏳ Збереження...';
+
+  try {
+    const updates = {
+      'model.default': document.getElementById('modelSelect').value,
+      'model.provider': document.getElementById('providerSelect').value,
+      'model.base_url': document.getElementById('baseUrlInput').value,
+    };
+
+    const result = await api('/api/settings', 'POST', {updates});
+    if (result.ok) {
+      toast('✅ Налаштування збережено!');
+    } else {
+      toast('❌ ' + (result.error || 'Помилка'), true);
+    }
+  } catch(e) {
+    toast('❌ ' + e.message, true);
+  }
+
+  this.disabled = false;
+  this.textContent = '💾 Зберегти модель';
+});
+
+// === API КЛЮЧ ===
+document.getElementById('toggleKeyBtn').addEventListener('click', function() {
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+  this.textContent = input.type === 'password' ? '👁' : '🙈';
+});
+
+// === ПЕРЕЗАПУСТИТИ СЕРВЕР ===
+document.getElementById('restartServerBtn').addEventListener('click', async function() {
+  if (!confirm('Перезапустити сервер? Чат тимчасово не працюватиме.')) return;
+  this.disabled = true;
+  this.textContent = '⏳ Перезапуск...';
+
+  try {
+    await api('/api/exec', 'POST', {cmd: 'pkill -f server.py; sleep 1; cd ~/hermonoid && python3 server/server.py &'});
+    toast('✅ Сервер перезапускається...');
+    setTimeout(() => { window.location.reload(); }, 2000);
+  } catch(e) {
+    toast('❌ ' + e.message, true);
+  }
+
+  this.disabled = false;
+  this.textContent = '🔄 Перезапустити сервер';
+});
+
+// === АВТОЗАПУСК ===
+document.getElementById('autoStartToggle').addEventListener('change', async function() {
+  const on = this.checked;
+  try {
+    if (on) {
+      // Перевірити чи вже є
+      const check = await api('/api/exec', 'POST', {cmd: 'grep -q "hermonoid" ~/.bashrc && echo "yes" || echo "no"'});
+      if (!check.output?.includes('yes')) {
+        await api('/api/exec', 'POST', {cmd: 'echo -e \"\\n# Hermonoid autostart\\n~/hermonoid/start.sh &\" >> ~/.bashrc'});
+      }
+    } else {
+      await api('/api/exec', 'POST', {cmd: 'sed -i \\"/hermonoid/d\\" ~/.bashrc'});
+    }
+    toast(on ? '✅ Автозапуск увімкнено' : '✅ Автозапуск вимкнено');
+  } catch(e) {
+    toast('❌ ' + e.message, true);
+    this.checked = !on;
+  }
+});
+
+// === ЗАВАНТАЖИТИ ПРИ СТАРТІ ===
+loadSettings();
+</script>
+</body>
+</html>

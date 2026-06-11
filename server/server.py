@@ -224,6 +224,149 @@ def exec_command(cmd):
     except Exception as e:
         return f"❌ {str(e)}"
 
+# ====== НАЛАШТУВАННЯ HERMES ======
+
+CONFIG_PATH = os.path.expanduser("~/.hermes/config.yaml")
+
+def load_hermes_config():
+    """Прочитати config.yaml Hermes, повернути dict з важливими полями"""
+    if not os.path.exists(CONFIG_PATH):
+        return {"error": "config.yaml не знайдено"}
+    try:
+        with open(CONFIG_PATH) as f:
+            raw = f.read()
+        config = {"raw": raw}
+        for line in raw.split("\n"):
+            stripped = line.rstrip()
+            if not stripped or stripped.startswith("#") or stripped.startswith("-"):
+                continue
+            if ":" in stripped:
+                indent = len(line) - len(line.lstrip())
+                key = stripped.split(":")[0].strip()
+                val = stripped.split(":", 1)[1].strip().strip("'\"")
+                if indent == 0:
+                    config[key] = val
+                elif indent == 2:
+                    # nested key: model.default
+                    parent = list(config.keys())[-1] if config else ""
+                    config[f"{parent}.{key}"] = val
+        return config
+    except Exception as e:
+        return {"error": str(e)}
+
+def update_hermes_config(updates):
+    """Оновити конкретні поля в config.yaml"""
+    if not os.path.exists(CONFIG_PATH):
+        return {"error": "Config not found"}
+    try:
+        config_raw = open(CONFIG_PATH).read()
+        lines = config_raw.split("\n")
+        
+        # Поля, які можна змінювати
+        allowed = {
+            "model.default": r"^\s*default:\s*.+",
+            "model.provider": r"^\s*provider:\s*.+",
+            "model.base_url": r"^\s*base_url:\s*.+",
+        }
+        
+        changed = False
+        for key, value in updates.items():
+            if key == "model.default":
+                for i, line in enumerate(lines):
+                    if re.match(r"^\s*default:", line):
+                        lines[i] = re.sub(r"(default:\s*).*", r"\1" + value, line)
+                        changed = True
+                        break
+            elif key == "model.provider":
+                for i, line in enumerate(lines):
+                    if re.match(r"^\s*provider:", line) and i < 5:
+                        lines[i] = re.sub(r"(provider:\s*).*", r"\1" + value, line)
+                        changed = True
+                        break
+            elif key == "model.base_url":
+                for i, line in enumerate(lines):
+                    if re.match(r"^\s*base_url:", line) and i < 10:
+                        lines[i] = re.sub(r"(base_url:\s*).*", r"\1" + value, line)
+                        changed = True
+                        break
+            elif key == "model.api_key":
+                # Шукаємо чи є вже env або api_key в config
+                api_key_line = None
+                for i, line in enumerate(lines):
+                    if "DEEPSEEK_API_KEY" in line or "OPENAI_API_KEY" in line:
+                        api_key_line = i
+                        break
+                if api_key_line is None:
+                    # Додаємо в секцію model
+                    for i, line in enumerate(lines):
+                        if line.strip().startswith("base_url:"):
+                            lines.insert(i + 1, f"  api_key: {value}")
+                            changed = True
+                            break
+                else:
+                    lines[api_key_line] = re.sub(r"(DEEPSEEK_API_KEY|OPENAI_API_KEY).*", f"DEEPSEEK_API_KEY={value}", lines[api_key_line])
+                    changed = True
+        
+        if not changed:
+            return {"ok": False, "error": "Нічого не змінено"}
+        
+        with open(CONFIG_PATH, "w") as f:
+            f.write("\n".join(lines))
+        
+        return {"ok": True, "config": load_hermes_config()}
+    except Exception as e:
+        return {"error": str(e)}
+
+PROVIDER_LIST = [
+    {"id": "deepseek", "name": "DeepSeek", "base_url": "https://api.deepseek.com"},
+    {"id": "openai", "name": "OpenAI", "base_url": "https://api.openai.com/v1"},
+    {"id": "anthropic", "name": "Anthropic", "base_url": "https://api.anthropic.com"},
+    {"id": "openrouter", "name": "OpenRouter", "base_url": "https://openrouter.ai/api/v1"},
+    {"id": "together", "name": "Together AI", "base_url": "https://api.together.xyz/v1"},
+]
+
+def get_available_models():
+    """Отримати список доступних моделей"""
+    models = [
+        {"id": "deepseek-chat", "name": "DeepSeek V3", "provider": "deepseek"},
+        {"id": "deepseek-reasoner", "name": "DeepSeek R1", "provider": "deepseek"},
+        {"id": "gpt-4o", "name": "GPT-4o", "provider": "openai"},
+        {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "provider": "openai"},
+        {"id": "o3-mini", "name": "o3-mini", "provider": "openai"},
+        {"id": "claude-sonnet-4", "name": "Claude Sonnet 4", "provider": "anthropic"},
+        {"id": "claude-haiku-3.5", "name": "Claude Haiku 3.5", "provider": "anthropic"},
+        {"id": "claude-opus-4", "name": "Claude Opus 4", "provider": "anthropic"},
+        {"id": "anthropic/claude-sonnet-4", "name": "Claude Sonnet 4 (OpenRouter)", "provider": "openrouter"},
+        {"id": "openai/gpt-4o", "name": "GPT-4o (OpenRouter)", "provider": "openrouter"},
+        {"id": "deepseek/deepseek-chat", "name": "DeepSeek V3 (OpenRouter)", "provider": "openrouter"},
+        {"id": "google/gemini-2.0-flash-exp", "name": "Gemini 2.0 Flash (OpenRouter)", "provider": "openrouter"},
+        {"id": "meta-llama/llama-3.1-70b", "name": "Llama 3.1 70B", "provider": "together"},
+    ]
+    return models
+
+def get_env_api_key():
+    """Отримати API ключ з оточення"""
+    for var in ["DEEPSEEK_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"]:
+        val = os.environ.get(var)
+        if val:
+            return {"key": var, "value": val[:8] + "..." + val[-4:] if len(val) > 12 else "***"}
+    # З конфігу
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH) as f:
+            raw = f.read()
+        for var in ["DEEPSEEK_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"]:
+            if var in raw:
+                return {"key": var, "value": "*** (в config.yaml)"}
+    return None
+
+def get_hermes_version():
+    """Отримати версію Hermes CLI"""
+    try:
+        r = subprocess.run([HERMES_BIN, "--version"], capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() or r.stderr.strip() or "unknown"
+    except:
+        return "unknown"
+
 # ====== СЕРВЕР ======
 
 def route(path):
@@ -278,6 +421,34 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
                 return self.json_error("Not found", 404)
             if len(parts) == 5 and parts[4] == "messages":
                 return self.json_ok({"messages": get_messages(parts[3])})
+
+        # Налаштування
+        if base == "/api/config/providers":
+            models = get_available_models()
+            return self.json_ok({"providers": PROVIDER_LIST, "models": models})
+
+        # GET /api/settings — отримати всю конфігурацію
+        if base == "/api/settings":
+            config = load_hermes_config()
+            api_key = get_env_api_key()
+            version = get_hermes_version()
+            hermes_available = subprocess.run(["sh", "-c", "command -v hermes"], capture_output=True).returncode == 0 \
+                or os.path.exists(HERMES_BIN)
+            return self.json_ok({
+                "config": config,
+                "api_key": api_key,
+                "version": version,
+                "hermes_available": hermes_available,
+                "providers": PROVIDER_LIST,
+                "models": get_available_models(),
+                "server_port": PORT,
+                "server_host": HOST,
+            })
+
+        # GET /settings.html — сторінка налаштувань
+        if base == "/settings.html" or base == "/settings":
+            self.serve_file(os.path.join(os.path.dirname(__file__), "..", "web", "settings.html"), "text/html; charset=utf-8")
+            return
 
         self.json_error("Not found", 404)
 
@@ -440,6 +611,11 @@ class ChatHandler(http.server.BaseHTTPRequestHandler):
             if not cmd: return self.json_error("Command required", 400)
             output = exec_command(cmd)
             return self.json_ok({"output": output})
+
+        # POST /api/settings — зберегти налаштування
+        if base == "/api/settings":
+            result = update_hermes_config(data.get("updates", {}))
+            return self.json_ok(result)
 
         self.json_error("Not found", 404)
 
