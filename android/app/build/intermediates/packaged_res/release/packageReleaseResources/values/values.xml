@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hermonoid</string>
+    <string name="loading">Завантаження Hermonoid...</string>
+    <string name="url_hint">http://localhost:8080</string>
+    <style name="Theme.Hermonoid" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#0a0a0f</item>
+        <item name="android:navigationBarColor">#0a0a0f</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

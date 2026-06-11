@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Налаштування Hermonoid</title>
+<title>Hermonoid</title>
 <style>
   :root { --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460; --accent: #e94560; --text: #eee; --text2: #aaa; --border: #2a2a4a; --success: #2ecc71; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
   .header h1 { font-size: 18px; flex: 1; }
-  .header a { background: var(--surface2); border: none; color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; text-decoration: none; }
+  .header a { background: var(--surface2); padding: 8px 16px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: 14px; }
   .header a:hover { background: var(--accent); }
   .container { max-width: 600px; margin: 0 auto; padding: 16px; }
   .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
@@ -19,210 +19,144 @@
   .field { margin-bottom: 14px; }
   .field:last-child { margin-bottom: 0; }
   .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
-  .field input, .field select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; }
+  .field input, .field select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
   .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
   .field .hint { font-size: 11px; color: var(--text2); margin-top: 3px; }
   .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { opacity: 0.9; }
   .btn-secondary { background: var(--surface2); color: var(--text); }
-  .btn-secondary:hover { background: var(--accent); }
-  .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-  .badge-ok { background: rgba(46,204,113,0.2); color: var(--success); }
-  .badge-off { background: rgba(233,69,96,0.2); color: var(--accent); }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 10px 24px; border-radius: 8px; font-size: 14px; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-  .toast.error { background: var(--accent); }
-  .steps { padding: 0; list-style: none; counter-reset: step; }
-  .steps li { counter-increment: step; padding: 8px 0 8px 32px; position: relative; font-size: 13px; color: var(--text2); line-height: 1.5; }
-  .steps li::before { content: counter(step); position: absolute; left: 0; top: 8px; width: 22px; height: 22px; background: var(--surface2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text); }
-  .steps li a { color: var(--accent); text-decoration: none; }
+  .badge-ok { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; background:rgba(46,204,113,0.2); color:var(--success); }
+  .badge-off { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; background:rgba(233,69,96,0.2); color:var(--accent); }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--success); color:white; padding:10px 24px; border-radius:8px; font-size:14px; z-index:100; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+  .toast.show { opacity:1; } .toast.error { background:var(--accent); }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>⚙️ Налаштування</h1>
-  <a href="/">← Назад</a>
-</div>
+<div class="header"><h1>⚙️ Налаштування</h1><a href="/">← Назад</a></div>
 <div class="container">
-
-  <!-- API Key -->
   <div class="section">
-    <div class="section-title">🔑 API Ключ OpenRouter</div>
+    <div class="section-title">🔑 API Ключ (gonka)</div>
     <div class="section-body">
       <div class="field">
         <label>API ключ</label>
         <div style="display:flex;gap:8px;">
-          <input type="password" id="apiKey" placeholder="sk-or-v1-..." style="flex:1;">
-          <button class="btn btn-secondary" onclick="toggleKey()" id="toggleBtn">👁</button>
+          <input type="password" id="apiKey" placeholder="sk-..." style="flex:1;">
+          <button class="btn btn-secondary" onclick="toggleKey()">👁</button>
         </div>
         <div class="hint" id="keyStatus"></div>
       </div>
-      <div class="actions" style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;margin-top:8px;">
         <button class="btn btn-primary" onclick="saveKey()">💾 Зберегти</button>
         <button class="btn btn-secondary" onclick="testKey()">🔍 Перевірити</button>
       </div>
     </div>
   </div>
-
-  <!-- Model -->
+  <div class="section">
+    <div class="section-title">🌐 API URL</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Base URL</label>
+        <input type="text" id="baseUrl" placeholder="https://proxy.gonka.gg/v1">
+        <div class="hint">OpenAI-сумісний API ендпоінт (gonka, openrouter тощо)</div>
+      </div>
+    </div>
+  </div>
   <div class="section">
     <div class="section-title">🤖 Модель</div>
     <div class="section-body">
       <div class="field">
         <label>Модель</label>
         <select id="modelSelect"></select>
-        <div class="hint">DeepSeek V3 — безкоштовна модель на OpenRouter</div>
       </div>
     </div>
   </div>
-
-  <!-- How to get key -->
-  <div class="section">
-    <div class="section-title">❓ Як отримати ключ</div>
-    <div class="section-body">
-      <ol class="steps">
-        <li>Перейди на <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a></li>
-        <li>Зареєструйся (Google або GitHub)</li>
-        <li>Натисни <strong>「Create Key」</strong></li>
-        <li>Скопіюй ключ (починається з <code>sk-or-v1-</code>)</li>
-        <li>Встав його в поле вище та натисни <strong>Зберегти</strong></li>
-        <li>Натисни <strong>Перевірити</strong> щоб переконатись що ключ працює</li>
-        <li>Повернись до чату і починай спілкування! 🎉</li>
-      </ol>
-    </div>
-  </div>
-
-  <!-- Info -->
   <div class="section">
     <div class="section-title">ℹ️ Про додаток</div>
     <div class="section-body">
       <div style="font-size:13px;color:var(--text2);line-height:1.6;">
-        <p><strong>Hermonoid v2.0</strong> — WebView обгортка для OpenRouter API</p>
-        <p style="margin-top:8px;">Всі дані зберігаються локально на пристрої.</p>
-        <p>Модель та ключ — в налаштуваннях вище.</p>
+        <strong>Hermonoid v3 — Self-Contained</strong><br>
+        Python + веб-інтерфейс всередині APK.<br>
+        Працює з gonka, OpenRouter, будь-яким OpenAI API.<br>
+        Сесії та історія зберігаються локально.
       </div>
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
 const API = window.location.origin;
 
 async function loadConfig() {
   try {
     const r = await fetch(API + '/api/config');
-    const data = await r.json();
-
-    // API key status
-    const status = document.getElementById('keyStatus');
-    if (data.api_key) {
-      status.innerHTML = '<span class="status-badge badge-ok">🔒 Ключ збережено</span>';
-    } else {
-      status.innerHTML = '<span class="status-badge badge-off">⚠️ Ключ не налаштовано</span>';
+    const d = await r.json();
+    document.getElementById('keyStatus').innerHTML = d.api_key
+      ? '<span class="badge-ok">🔒 Ключ збережено</span>'
+      : '<span class="badge-off">⚠️ Ключ не налаштовано</span>';
+    document.getElementById('baseUrl').value = d.base_url || 'https://proxy.gonka.gg/v1';
+    const sel = document.getElementById('modelSelect');
+    sel.innerHTML = '';
+    for (const m of (d.models || [])) {
+      const o = document.createElement('option');
+      o.value = m.id;
+      o.textContent = m.name + (m.free ? ' 🆓' : '');
+      if (m.id === d.model) o.selected = true;
+      sel.appendChild(o);
     }
-
-    // Model
-    const select = document.getElementById('modelSelect');
-    select.innerHTML = '';
-    for (const m of data.models || []) {
-      const opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = m.name + (m.free ? ' 🆓' : '');
-      if (m.id === data.model) opt.selected = true;
-      select.appendChild(opt);
-    }
-  } catch (e) {
-    console.error('Failed to load config', e);
-  }
+  } catch(e) { console.error(e); }
 }
 
 async function saveKey() {
   const key = document.getElementById('apiKey').value.trim();
-  if (!key) { showToast('Введи API ключ', true); return; }
-  if (!key.startsWith('sk-or-')) { showToast('Ключ має починатись з sk-or-', true); return; }
+  if (!key) { showToast('Введи ключ', true); return; }
   try {
-    const r = await fetch(API + '/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: key })
-    });
-    const data = await r.json();
-    if (data.ok) {
-      showToast('✅ Ключ збережено!');
-      document.getElementById('apiKey').value = '';
-      loadConfig();
-    } else {
-      showToast('❌ Помилка: ' + (data.error || 'невідома'), true);
-    }
-  } catch (e) {
-    showToast('❌ Помилка: ' + e.message, true);
-  }
+    const r = await fetch(API + '/api/settings', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({api_key: key}) });
+    const d = await r.json();
+    if (d.ok) { showToast('✅ Ключ збережено!'); document.getElementById('apiKey').value=''; loadConfig(); }
+  } catch(e) { showToast('❌ '+e.message, true); }
 }
 
 async function testKey() {
-  const key = document.getElementById('apiKey').value.trim();
-  const testKey = key || null;
-  if (!testKey) {
-    // Try saved key
-    try {
-      const r = await fetch(API + '/api/config');
-      const data = await r.json();
-      if (!data.api_key) { showToast('❌ Спочатку збережи ключ', true); return; }
-    } catch(e) { showToast('❌ ' + e.message, true); return; }
-  }
-  showToast('🔄 Перевіряю ключ...');
+  showToast('🔄 Перевіряю...');
   try {
-    const r = await fetch(API + '/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Відповідь одним словом: "Привіт"' })
-    });
-    const data = await r.json();
-    if (data.response && !data.response.startsWith('❌')) {
-      showToast('✅ Ключ працює! Відповідь: ' + data.response.substring(0, 50));
-    } else {
-      showToast('❌ ' + (data.response || 'Помилка'), true);
-    }
-  } catch (e) {
-    showToast('❌ ' + e.message, true);
-  }
+    const r = await fetch(API + '/api/chat', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:'Скажи "Привіт" одним словом'}) });
+    const d = await r.json();
+    if (d.response && !d.response.startsWith('❌'))
+      showToast('✅ Працює! Відповідь: '+d.response.substring(0,60));
+    else showToast('❌ '+d.response, true);
+  } catch(e) { showToast('❌ '+e.message, true); }
 }
 
 async function saveModel() {
   const model = document.getElementById('modelSelect').value;
+  const baseUrl = document.getElementById('baseUrl').value.trim();
   try {
-    const r = await fetch(API + '/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: model })
-    });
-    const data = await r.json();
-    if (data.ok) showToast('✅ Модель збережено: ' + model);
-  } catch (e) { showToast('❌ ' + e.message, true); }
+    await fetch(API + '/api/settings', { method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model, base_url: baseUrl}) });
+    showToast('✅ Збережено');
+  } catch(e) { showToast('❌ '+e.message, true); }
 }
 
 function toggleKey() {
-  const input = document.getElementById('apiKey');
-  const btn = document.getElementById('toggleBtn');
-  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-  else { input.type = 'password'; btn.textContent = '👁'; }
+  const i = document.getElementById('apiKey');
+  i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-let toastTimer = null;
-function showToast(msg, isError = false) {
+let tt;
+function showToast(msg, err) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (isError ? ' error' : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  el.textContent = msg; el.className = 'toast show' + (err?' error':'');
+  clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// Auto-save model on change
 document.getElementById('modelSelect').addEventListener('change', saveModel);
-
+document.getElementById('baseUrl').addEventListener('change', saveModel);
 loadConfig();
 </script>
 </body>

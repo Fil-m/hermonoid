@@ -17,7 +17,7 @@ android {
         python {
             buildPython "/usr/bin/python3"
             pip {
-                install "hermes-agent"
+                install "requests"
             }
         }
 

@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.hermonoid.app-release-33:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.hermonoid.app-main-34:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.hermonoid.app-release-33:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.hermonoid.app-main-34:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.hermonoid.app-release-33:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.hermonoid.app-main-34:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.hermonoid.app-release-33:/drawable_ic_launcher_background.png.flat",
+        "source": "com.hermonoid.app-main-34:/drawable/ic_launcher_background.png"
+    },
+    {
+        "merged": "com.hermonoid.app-release-33:/xml_network_security_config.xml.flat",
+        "source": "com.hermonoid.app-main-34:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.hermonoid.app-release-33:/drawable_ic_launcher_foreground.png.flat",
+        "source": "com.hermonoid.app-main-34:/drawable/ic_launcher_foreground.png"
+    }
+]
