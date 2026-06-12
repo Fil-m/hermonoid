@@ -1,0 +1,82 @@
+name: Build & Release Hermonoid APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. 4.1.0)'
+        required: false
+        default: ''
+      create_release:
+        description: 'Create GitHub Release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Release APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
+      - name: Verify APK
+        run: |
+          ls -lh android/app/build/outputs/apk/release/
+          file android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermonoid-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+
+      - name: Create Release
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version || '4.0.0' }}
+          name: Hermonoid v${{ github.event.inputs.version || '4.0.0' }}
+          body: |
+            ## 🤖 Hermonoid v${{ github.event.inputs.version || '4.0.0' }}
+
+            **Web Chat UI for Hermes Agent on Android**
+
+            ### ⚡ Встановлення
+            1. Завантаж `Hermonoid.apk`
+            2. Відкрий на Android → погодься встановити з невідомих джерел
+            3. Запусти — зачекай ~30 сек поки Termux розпакується
+            4. Користуйсь!
+
+            ### 🔧 Що всередині
+            - Android WebView чат з Hermes Agent
+            - Termux bootstrap (bash, curl, python)
+            - Python сервер з OpenAI-сумісним API
+            - Веб-інтерфейс з підтримкою медіа та файлів
+          files: android/app/build/outputs/apk/release/app-release.apk
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
