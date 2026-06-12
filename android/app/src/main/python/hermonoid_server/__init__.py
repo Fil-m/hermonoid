@@ -481,8 +481,16 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
     def _serve_static(self, path):
+        name = path.lstrip("/")
+        if not name:
+            name = "index.html"
+        # Try multiple paths
+        candidates = []
         for prefix in ["web/", ""]:
-            full = os.path.join(PATHS["assets_dir"], prefix, path.lstrip("/"))
+            candidates.append(os.path.join(PATHS["assets_dir"], prefix, name))
+        # Also try relative to this Python file
+        candidates.append(os.path.join(os.path.dirname(__file__), "web", name))
+        for full in candidates:
             if os.path.isfile(full):
                 ext = os.path.splitext(full)[1].lower()
                 mime = {
