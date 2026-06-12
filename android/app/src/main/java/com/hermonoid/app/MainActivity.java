@@ -112,6 +112,10 @@ public class MainActivity extends AppCompatActivity {
             String assetsPath = filesDir.getAbsolutePath() + "/chaquopy/asset";
             String dbDir = filesDir.getAbsolutePath();
 
+            // ── Copy web assets from APK to filesystem ──
+            setSplash("🌐 Веб-інтерфейс...");
+            extractWebAssets(new File(assetsPath));
+
             setSplash("📦 Розпаковка Termux (30MB)...");
             py.getModule("hermonoid_server").callAttr("start_server", assetsPath, dbDir);
 
@@ -150,6 +154,25 @@ public class MainActivity extends AppCompatActivity {
             Log.e("Hermonoid", "Init failed", e);
             final String err = e.getMessage() != null ? e.getMessage() : "Невідома помилка";
             mainHandler.post(() -> showError("❌ " + err));
+        }
+    }
+
+    private void extractWebAssets(File assetsDir) throws IOException {
+        File webDir = new File(assetsDir, "web");
+        webDir.mkdirs();
+        copyAsset("web/index.html", new File(webDir, "index.html"));
+        copyAsset("web/settings.html", new File(webDir, "settings.html"));
+        Log.i("Hermonoid", "Web assets extracted to " + webDir);
+    }
+
+    private void copyAsset(String assetPath, File outFile) throws IOException {
+        try (InputStream in = getAssets().open(assetPath);
+             FileOutputStream out = new FileOutputStream(outFile)) {
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                out.write(buf, 0, n);
+            }
         }
     }
 
