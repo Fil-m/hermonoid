@@ -25,3 +25,7 @@ Thumbs.db
 
 # Hermes
 .hermes/
+
+# Hermonoid
+server.log
+uploads/

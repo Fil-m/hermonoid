@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>Hermonoid</title>
+<style>
+/* ─── CSS Root ─────────────────────────────────────────── */
+:root {
+  --bg: #1a1a2e;
+  --bg2: #222244;
+  --bg3: #2d2d44;
+  --accent: #7c3aed;
+  --accent2: #6d28d9;
+  --text: #e0e0e0;
+  --text2: #888;
+  --user-bubble: #7c3aed;
+  --assistant-bubble: #2d2d44;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+  background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;
+  display:flex;flex-direction:column;
+  overscroll-behavior:none;
+}
+input,textarea,select,button{font-family:inherit}
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--text2);border-radius:4px}
+/* ─── Top Bar ───────────────────────────────────────────── */
+.top-bar{
+  display:flex;align-items:center;padding:8px 12px;
+  background:var(--bg2);border-bottom:1px solid #333;
+  gap:8px;flex-shrink:0;z-index:10;
+}
+.top-bar .title{font-size:20px;font-weight:bold;color:var(--accent);flex:1}
+.top-bar .btn{
+  background:none;border:none;color:var(--text2);font-size:22px;
+  cursor:pointer;padding:6px 10px;border-radius:var(--radius-sm);
+  transition:all 0.2s;
+}
+.top-bar .btn:hover,.top-bar .btn.active{background:var(--bg3);color:var(--accent)}
+/* ─── Chat ──────────────────────────────────────────────── */
+.chat-area{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chat-area.hidden{display:none}
+.message{max-width:80%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.message.user{
+  align-self:flex-end;background:var(--user-bubble);color:#fff;
+  border-bottom-right-radius:6px;
+}
+.message.assistant{
+  align-self:flex-start;background:var(--assistant-bubble);color:var(--text);
+  border-bottom-left-radius:6px;
+}
+.message.image{background:transparent;padding:0;max-width:300px}
+.message.image img{width:100%;border-radius:12px;display:block}
+.message.file{
+  background:var(--bg3);cursor:pointer;border:1px solid var(--accent);
+  display:flex;align-items:center;gap:8px;
+}
+.message.file:hover{background:var(--accent);color:#fff}
+.typing{
+  align-self:flex-start;background:var(--assistant-bubble);padding:12px 18px;
+  border-radius:18px;border-bottom-left-radius:6px;display:flex;gap:4px;
+}
+.typing span{width:8px;height:8px;background:var(--text2);border-radius:50%;animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typing{0%,60%,100%{opacity:0.3}30%{opacity:1}}
+/* ─── Input ─────────────────────────────────────────────── */
+.input-area{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  background:var(--bg);flex-shrink:0;
+}
+.input-area .input-wrap{
+  flex:1;display:flex;align-items:center;gap:4px;
+  background:var(--bg2);border-radius:24px;padding:4px 8px;
+  border:1px solid #333;
+}
+.input-area .input-wrap:focus-within{border-color:var(--accent)}
+.input-area input{
+  flex:1;background:none;border:none;color:var(--text);font-size:15px;
+  padding:8px 4px;outline:none;
+}
+.input-area input::placeholder{color:var(--text2)}
+.input-btn{
+  background:none;border:none;color:var(--text2);font-size:20px;
+  cursor:pointer;padding:6px;border-radius:50%;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.input-btn:hover{background:var(--bg3);color:var(--accent)}
+.input-btn.send{color:var(--accent);background:var(--bg3)}
+.input-btn.send:hover{background:var(--accent);color:#fff}
+/* ─── Status Bar ─────────────────────────────────────────── */
+.status-bar{
+  display:flex;align-items:center;gap:8px;padding:4px 12px;
+  padding-bottom:calc(4px + env(safe-area-inset-bottom));
+  background:var(--bg2);font-size:12px;color:var(--text2);
+  flex-shrink:0;border-top:1px solid #333;
+}
+.status-bar .model-info{margin-left:auto}
+/* ─── Settings Panel ─────────────────────────────────────── */
+.settings-panel{
+  display:none;flex-direction:column;flex:1;overflow:hidden;
+}
+.settings-panel.active{display:flex}
+.settings-header{padding:12px 16px;font-size:18px;font-weight:bold;color:var(--accent);flex-shrink:0}
+.settings-tabs{
+  display:flex;overflow-x:auto;gap:0;flex-shrink:0;
+  border-bottom:1px solid #333;
+}
+.settings-tab{
+  padding:10px 16px;font-size:13px;cursor:pointer;white-space:nowrap;
+  color:var(--text2);border-bottom:2px solid transparent;transition:all 0.2s;
+  flex-shrink:0;
+}
+.settings-tab:hover{color:var(--text);background:var(--bg3)}
+.settings-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.settings-body{
+  flex:1;overflow-y:auto;padding:12px 16px;
+}
+/* ─── Sessions Panel ─────────────────────────────────────── */
+.sessions-panel{
+  display:none;flex-direction:column;flex:1;overflow:hidden;
+}
+.sessions-panel.active{display:flex}
+.sessions-header{padding:12px 16px;font-size:16px;font-weight:bold;color:var(--accent);flex-shrink:0}
+.sessions-list{flex:1;overflow-y:auto;padding:8px 12px}
+.session-item{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-radius:var(--radius-sm);cursor:pointer;
+  transition:all 0.2s;border-bottom:1px solid #333;
+}
+.session-item:hover{background:var(--bg3)}
+.session-item .icon{font-size:18px;flex-shrink:0}
+.session-item .info{flex:1;min-width:0}
+.session-item .title{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.session-item .date{font-size:11px;color:var(--text2)}
+.session-item .del-btn{
+  background:none;border:none;color:var(--danger);font-size:16px;
+  cursor:pointer;padding:4px;border-radius:4px;display:none;
+}
+.session-item:hover .del-btn{display:block}
+.session-item .del-btn:hover{background:var(--danger);color:#fff}
+/* ─── Session Detail ─────────────────────────────────────── */
+.session-detail{
+  display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:50;
+  background:var(--bg);flex-direction:column;
+}
+.session-detail.active{display:flex}
+.session-detail-header{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  background:var(--bg2);flex-shrink:0;
+}
+.session-detail-header .back-btn{
+  background:none;border:none;color:var(--accent);font-size:14px;
+  cursor:pointer;padding:6px 10px;
+}
+.session-detail-header .title{
+  flex:1;font-size:15px;font-weight:bold;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.session-detail-body{
+  flex:1;overflow-y:auto;padding:12px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.session-detail-body .msg{
+  padding:8px 12px;border-radius:12px;font-size:14px;
+  line-height:1.5;max-width:85%;word-wrap:break-word;white-space:pre-wrap;
+}
+.session-detail-body .msg.user{
+  align-self:flex-end;background:var(--user-bubble);color:#fff;
+  border-bottom-right-radius:4px;
+}
+.session-detail-body .msg.assistant{
+  align-self:flex-start;background:var(--assistant-bubble);color:var(--text);
+  border-bottom-left-radius:4px;
+}
+.session-detail-empty{
+  display:flex;align-items:center;justify-content:center;flex:1;
+  color:var(--text2);font-size:14px;
+}
+.settings-section{display:none}
+.settings-section.active{display:block}
+.settings-section h3{font-size:15px;margin:8px 0;color:var(--accent)}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:3px}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:8px 10px;border-radius:var(--radius-sm);
+  background:var(--bg3);border:1px solid #444;color:var(--text);
+  font-size:14px;outline:none;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group .switch{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:6px 0;
+}
+.form-group .switch input[type="checkbox"]{
+  width:0;height:0;opacity:0;position:absolute;
+}
+.form-group .switch .slider{
+  width:44px;height:24px;background:#555;border-radius:12px;position:relative;
+  transition:0.3s;flex-shrink:0;
+}
+.form-group .switch .slider::after{
+  content:'';position:absolute;width:20px;height:20px;border-radius:50%;
+  background:white;top:2px;left:2px;transition:0.3s;
+}
+.form-group .switch input:checked + .slider{background:var(--accent)}
+.form-group .switch input:checked + .slider::after{left:22px}
+.form-group .switch .label-text{font-size:14px}
+.form-group .grid-2{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+}
+.btn{
+  padding:8px 16px;border:none;border-radius:var(--radius-sm);
+  font-size:14px;cursor:pointer;transition:all 0.2s;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.btn-outline:hover{background:var(--accent);color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+/* ─── Toast / Notification ──────────────────────────────── */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);color:var(--text);padding:10px 20px;
+  border-radius:var(--radius);border:1px solid var(--accent);
+  font-size:14px;z-index:100;display:none;animation:toastIn 0.3s;
+  max-width:90vw;text-align:center;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* ─── Responsive ─────────────────────────────────────────── */
+/* ─── Sessions Panel ─────────────────────────────────────── */
+.sessions-panel{
+  display:none;flex-direction:column;flex:1;overflow:hidden;
+}
+.sessions-panel.active{display:flex}
+.sessions-header{padding:12px 16px;font-size:18px;font-weight:bold;color:var(--accent);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sessions-header .close{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;margin-left:auto;padding:4px 8px;border-radius:var(--radius-sm)}
+.sessions-header .close:hover{background:var(--bg3);color:var(--text)}
+.sessions-list{flex:1;overflow-y:auto;padding:8px 12px}
+.session-card{
+  background:var(--bg3);border-radius:var(--radius);padding:12px;margin-bottom:8px;
+  cursor:pointer;transition:all 0.2s;border:1px solid transparent;
+}
+.session-card:hover{background:var(--bg2);border-color:var(--accent)}
+.session-card .s-title{font-size:14px;color:var(--text);font-weight:bold;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-card .s-meta{font-size:11px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap}
+.session-card .s-meta span{display:flex;align-items:center;gap:3px}
+.session-card .s-preview{font-size:12px;color:var(--text2);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ─── Session Detail (messages) ──────────────────────────── */
+.session-detail{
+  display:none;flex-direction:column;flex:1;overflow:hidden;position:absolute;inset:0;z-index:20;
+  background:var(--bg);
+}
+.session-detail.active{display:flex}
+.session-detail-header{
+  display:flex;align-items:center;padding:10px 12px;background:var(--bg2);
+  border-bottom:1px solid #333;flex-shrink:0;gap:8px;
+}
+.session-detail-header .back-btn{background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;padding:4px 8px}
+.session-detail-header .s-title{font-size:16px;font-weight:bold;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-detail-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.session-detail-body .message{max-width:95%;font-size:13px;padding:8px 12px;border-radius:14px}
+.session-detail-body .message.assistant{border:1px solid #333}
+
+@media(max-width:480px){
+  .message{max-width:90%;font-size:14px}
+  .settings-tab{padding:8px 10px;font-size:12px}
+  .session-detail{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30}
+}
+/* ─── File/Camera hidden inputs ─────────────────────────── */
+.hidden-input{display:none}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <button class="btn active" id="btnChat" onclick="showChat()">💬</button>
+  <span class="title">Hermonoid</span>
+  <button class="btn" id="btnSessions" onclick="showSessions()">📋</button>
+  <button class="btn" id="btnSettings" onclick="showSettings()">⚙️</button>
+  <button class="btn" onclick="toggleTheme()">🌓</button>
+</div>
+
+<!-- Chat Area -->
+<div class="chat-area" id="chatArea"></div>
+
+<!-- Settings Panel -->
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">⚙️ Налаштування Hermes</div>
+  <div class="settings-tabs" id="settingsTabs"></div>
+  <div class="settings-body" id="settingsBody"></div>
+</div>
+
+<!-- Sessions Panel -->
+<div class="sessions-panel" id="sessionsPanel">
+  <div class="sessions-header">
+    📋 Попередні сесії
+    <button class="close" onclick="showChat()">✕</button>
+  </div>
+  <div class="sessions-list" id="sessionsList"></div>
+</div>
+
+<!-- Session Detail (overlay) -->
+<div class="session-detail" id="sessionDetail">
+  <div class="session-detail-header">
+    <button class="back-btn" onclick="closeSessionDetail()">← Назад</button>
+    <span class="s-title" id="detailTitle">Сесія</span>
+  </div>
+  <div class="session-detail-body" id="detailMessages"></div>
+</div>
+
+<!-- Input Area -->
+<div class="input-area" id="inputArea">
+  <div class="input-wrap">
+    <button class="input-btn" onclick="pickFile()" title="Файл">📎</button>
+    <button class="input-btn" onclick="pickCamera()" title="Камера">📷</button>
+    <input type="text" id="msgInput" placeholder="Напишіть повідомлення..." 
+           onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendMessage()}">
+    <button class="input-btn send" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span id="statusText"></span>
+  <span class="model-info" id="modelInfo"></span>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="fileInput" class="hidden-input" onchange="handleFilePick(event)">
+<input type="file" id="cameraInput" class="hidden-input" accept="image/*" capture="environment" onchange="handleCameraPick(event)">
+
+<script>
+// ─── State ─────────────────────────────────────────────────
+let messages = [];
+let isDark = true;
+let currentConfig = {};
+let currentEnv = {};
+
+// ─── DOM Refs ──────────────────────────────────────────────
+const chatArea = document.getElementById('chatArea');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsTabs = document.getElementById('settingsTabs');
+const settingsBody = document.getElementById('settingsBody');
+const msgInput = document.getElementById('msgInput');
+const statusText = document.getElementById('statusText');
+const modelInfo = document.getElementById('modelInfo');
+const toastEl = document.getElementById('toast');
+
+// ─── Toast ─────────────────────────────────────────────────
+function showToast(msg, isError=false) {
+  toastEl.textContent = msg;
+  toastEl.style.display = 'block';
+  toastEl.style.borderColor = isError ? 'var(--danger)' : 'var(--accent)';
+  clearTimeout(toastEl._timer);
+  toastEl._timer = setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
+}
+
+// ─── Chat ──────────────────────────────────────────────────
+function addMessage(role, content, type='text') {
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  
+  if (type === 'image' && role === 'assistant') {
+    div.classList.add('image');
+    const img = document.createElement('img');
+    img.src = content.startsWith('http') ? content : `data:image/png;base64,${content}`;
+    img.loading = 'lazy';
+    div.appendChild(img);
+  } else if (type === 'file' && role === 'assistant') {
+    div.classList.add('file');
+    div.innerHTML = '📄 ' + content;
+    div.onclick = () => downloadFile(content);
+  } else {
+    div.textContent = content;
+  }
+  
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  
+  msgInput.value = '';
+  addMessage('user', text);
+  messages.push({role: 'user', content: text, type: 'text'});
+  
+  showTyping();
+  statusText.textContent = '🤔 Hermes думає...';
+  
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    const data = await res.json();
+    
+    hideTyping();
+    statusText.textContent = '';
+    
+    if (data.response) {
+      // Check for images/files in response
+      const resp = data.response;
+      const imgMatch = resp.match(/https?:\/\/[^\s]+\.(png|jpg|jpeg|gif|webp)/i);
+      const fileMatch = resp.match(/(?:Файл|FILE):\s*(.+)/);
+      
+      if (imgMatch) {
+        addMessage('assistant', imgMatch[1], 'image');
+      } else if (fileMatch) {
+        addMessage('assistant', fileMatch[1], 'file');
+      } else {
+        addMessage('assistant', resp);
+      }
+      messages.push({role: 'assistant', content: data.response, type: 'text'});
+    }
+  } catch (e) {
+    hideTyping();
+    addMessage('assistant', '❌ Помилка з\'єднання: ' + e.message);
+    statusText.textContent = '❌ Помилка';
+  }
+  
+  // Update status
+  updateStatus();
+}
+
+// ─── File/Camera ───────────────────────────────────────────
+function pickFile() {
+  document.getElementById('fileInput').click();
+}
+
+function pickCamera() {
+  document.getElementById('cameraInput').click();
+}
+
+async function handleFilePick(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  addMessage('user', `📎 Файл: ${file.name}`);
+  
+  // Read and upload
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    const b64 = ev.target.result.split(',')[1];
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename: file.name, content: b64, type: file.type.startsWith('text') ? 'text' : 'binary'})
+      });
+      const data = await res.json();
+      
+      // Auto-send to Hermes with file context
+      if (data.preview) {
+        msgInput.value = `Я надіслав файл: ${file.name}. Ось його вміст:\n${data.preview.substring(0,1500)}\n\n[файл ${file.name} завантажено, ${data.size} байт]`;
+      } else {
+        msgInput.value = `Я надіслав файл: ${file.name} (${data.size} байт).`;
+      }
+      // Don't auto-send - let user press Enter
+      showToast('✅ Файл завантажено');
+    } catch(e) {
+      showToast('❌ Помилка: ' + e.message, true);
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+async function handleCameraPick(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  addMessage('user', '📷 Фото з камери');
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    const b64 = ev.target.result.split(',')[1];
+    
+    // Display in chat
+    const preview = document.createElement('div');
+    preview.className = 'message user image';
+    preview.innerHTML = `<img src="data:image/jpeg;base64,${b64}" style="max-width:250px;border-radius:12px">`;
+    chatArea.appendChild(preview);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    
+    // Upload and auto-send
+    try {
+      await fetch('/api/upload', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({filename: 'camera_photo.jpg', content: b64, type: 'image'})
+      });
+      
+      msgInput.value = `Я надіслав фото з камери. Опиши що на ньому. [base64:${b64.substring(0,50)}...]`;
+      showToast('✅ Фото завантажено');
+    } catch(e) {
+      showToast('❌ Помилка: ' + e.message, true);
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function downloadFile(content) {
+  // Simple download via blob
+  const blob = new Blob([content], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hermes_output.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── Views ─────────────────────────────────────────────────
+function showChat() {
+  document.getElementById('chatArea').classList.remove('hidden');
+  settingsPanel.classList.remove('active');
+  document.getElementById('sessionsPanel').classList.remove('active');
+  document.getElementById('sessionDetail').classList.remove('active');
+  document.getElementById('btnChat').classList.add('active');
+  document.getElementById('btnSessions').classList.remove('active');
+  document.getElementById('btnSettings').classList.remove('active');
+}
+
+function showSettings() {
+  document.getElementById('chatArea').classList.add('hidden');
+  settingsPanel.classList.add('active');
+  document.getElementById('sessionsPanel').classList.remove('active');
+  document.getElementById('sessionDetail').classList.remove('active');
+  document.getElementById('btnChat').classList.remove('active');
+  document.getElementById('btnSessions').classList.remove('active');
+  document.getElementById('btnSettings').classList.add('active');
+  loadSettings();
+}
+
+// ─── Sessions ───────────────────────────────────────────────
+function showSessions() {
+  document.getElementById('chatArea').classList.add('hidden');
+  settingsPanel.classList.remove('active');
+  document.getElementById('sessionsPanel').classList.add('active');
+  document.getElementById('btnChat').classList.remove('active');
+  document.getElementById('btnSettings').classList.remove('active');
+  closeSessionDetail();
+  loadSessions();
+}
+
+function loadSessions() {
+  const list = document.getElementById('sessionsList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">⏳ Завантаження...</div>';
+  fetch('/api/sessions?limit=50')
+    .then(r => r.json())
+    .then(sessions => {
+      if (!sessions.length || sessions.error) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Немає попередніх сесій</div>';
+        return;
+      }
+      list.innerHTML = sessions.map(s => {
+        const title = s.title || 'Без назви';
+        const time = formatSessionTime(s.started_at);
+        const msgs = s.message_count || '?';
+        const tokens = (s.input_tokens || 0) + (s.output_tokens || 0);
+        const preview = s.first_user_msg ? escapeHtml(s.first_user_msg.substring(0, 120)) : '';
+        return `<div class="session-card" onclick="openSessionDetail('${s.id}')">
+          <div class="s-title">${escapeHtml(title)}</div>
+          ${preview ? `<div class="s-preview">${preview}</div>` : ''}
+          <div class="s-meta">
+            <span>🕐 ${time}</span>
+            <span>💬 ${msgs}</span>
+            <span>🔤 ${tokens.toLocaleString()}</span>
+            <span>📌 ${s.source || 'cli'}</span>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(e => {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger)">❌ Помилка: ' + e.message + '</div>';
+    });
+}
+
+function openSessionDetail(sessionId) {
+  document.getElementById('sessionDetail').classList.add('active');
+  document.getElementById('detailTitle').textContent = 'Завантаження...';
+  const body = document.getElementById('detailMessages');
+  body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">⏳ Завантаження повідомлень...</div>';
+
+  // Get title from session list
+  fetch('/api/sessions?limit=1')
+    .then(r => r.json())
+    .then(sessions => {
+      const s = sessions.find(x => x.id === sessionId);
+      if (s && s.title) document.getElementById('detailTitle').textContent = s.title;
+    })
+    .catch(() => {});
+
+  fetch('/api/sessions/' + sessionId + '/messages?limit=200')
+    .then(r => r.json())
+    .then(msgs => {
+      if (!msgs.length || msgs.error) {
+        body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Немає повідомлень</div>';
+        return;
+      }
+      body.innerHTML = msgs.map(m => {
+        const role = m.role === 'user' ? 'user' : 'assistant';
+        const content = truncateContent(m.content || '');
+        return `<div class="message ${role}">${escapeHtml(content)}</div>`;
+      }).join('');
+      body.scrollTop = body.scrollHeight;
+    })
+    .catch(e => {
+      body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger)">❌ Помилка: ' + e.message + '</div>';
+    });
+}
+
+function closeSessionDetail() {
+  document.getElementById('sessionDetail').classList.remove('active');
+}
+
+function formatSessionTime(ts) {
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'щойно';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' хв тому';
+  if (diff < 86400000) return Math.floor(diff/3600000) + ' год тому';
+  if (diff < 604800000) return Math.floor(diff/86400000) + ' дн тому';
+  return d.toLocaleDateString('uk-UA', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function truncateContent(s) {
+  if (!s) return '';
+  return s.length > 500 ? s.substring(0, 500) + '…' : s;
+}
+
+// ─── Theme ─────────────────────────────────────────────────
+function toggleTheme() {
+  isDark = !isDark;
+  const root = document.documentElement;
+  if (isDark) {
+    root.style.setProperty('--bg', '#1a1a2e');
+    root.style.setProperty('--bg2', '#222244');
+    root.style.setProperty('--bg3', '#2d2d44');
+    root.style.setProperty('--text', '#e0e0e0');
+    root.style.setProperty('--text2', '#888');
+    document.querySelector('meta[name=theme-color]').content = '#1a1a2e';
+  } else {
+    root.style.setProperty('--bg', '#ffffff');
+    root.style.setProperty('--bg2', '#f0f0f0');
+    root.style.setProperty('--bg3', '#e8e8e8');
+    root.style.setProperty('--text', '#1a1a2e');
+    root.style.setProperty('--text2', '#666');
+    document.querySelector('meta[name=theme-color]').content = '#f0f0f0';
+  }
+}
+
+// ─── Sessions ──────────────────────────────────────────────
+function showSessions() {
+  document.getElementById('chatArea').classList.add('hidden');
+  document.getElementById('settingsPanel').classList.remove('active');
+  document.getElementById('sessionsPanel').classList.add('active');
+  document.getElementById('sessionDetail').classList.remove('active');
+  document.getElementById('btnChat').classList.remove('active');
+  document.getElementById('btnSettings').classList.remove('active');
+  document.getElementById('btnSessions').classList.add('active');
+  loadSessions();
+}
+
+async function loadSessions() {
+  const list = document.getElementById('sessionsList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Завантаження...</div>';
+  
+  try {
+    const res = await fetch('/api/sessions');
+    const sessions = await res.json();
+    
+    if (sessions.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)">🤷 Немає попередніх сесій</div>';
+      return;
+    }
+    
+    list.innerHTML = sessions.map(s => `
+      <div class="session-item" onclick="viewSession('${s.id}')">
+        <span class="icon">💬</span>
+        <div class="info">
+          <div class="title">${s.title || 'Без назви'}</div>
+          <div class="date">${formatSessionDate(s.date)}${s.message_count ? ' · ' + s.message_count + ' повід.' : ''}</div>
+        </div>
+        <button class="del-btn" onclick="event.stopPropagation();deleteSession('${s.id}')" title="Видалити">🗑</button>
+      </div>
+    `).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger)">❌ Помилка завантаження</div>';
+  }
+}
+
+async function viewSession(id) {
+  // Show detail with loading
+  document.getElementById('sessionDetail').classList.add('active');
+  document.getElementById('sessionDetailTitle').textContent = 'Завантаження...';
+  document.getElementById('sessionDetailBody').innerHTML = '<div class="session-detail-empty">Завантаження...</div>';
+  
+  try {
+    // Get session messages from Hermes via --resume
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: `/history session:${id}`, context_id: id})
+    });
+    // Fallback: just resume and get title
+    const detail = document.getElementById('sessionDetailBody');
+    document.getElementById('sessionDetailTitle').textContent = `Сесія: ${id.substring(0,12)}...`;
+    detail.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text2)">
+        📋 Сесія <strong>${id}</strong><br><br>
+        <button class="btn btn-primary" onclick="resumeSession('${id}')">▶️ Продовжити в чаті</button>
+        <button class="btn btn-outline" onclick="closeSessionDetail()" style="margin-left:8px">← Назад</button>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('sessionDetailBody').innerHTML = 
+      '<div class="session-detail-empty" style="color:var(--danger)">❌ Помилка: ' + e.message + '</div>';
+  }
+}
+
+function resumeSession(id) {
+  showChat();
+  msgInput.value = `/resume ${id}`;
+  sendMessage();
+}
+
+function closeSessionDetail() {
+  document.getElementById('sessionDetail').classList.remove('active');
+}
+
+async function deleteSession(id) {
+  if (!confirm('Видалити сесію ' + id.substring(0,12) + '...?')) return;
+  
+  try {
+    const res = await fetch(`/api/sessions/${id}`, {method: 'DELETE'});
+    const data = await res.json();
+    showToast(data.status || '✅ Видалено');
+    loadSessions(); // Refresh list
+  } catch(e) {
+    showToast('❌ ' + e.message, true);
+  }
+}
+
+// ─── Safe Area / Viewport Fix ──────────────────────────────
+// When the virtual keyboard opens/closes or address bar hides on mobile,
+// ensure the input area stays visible above the nav bar
+function applySafeArea() {
+  // If visualViewport is available, use it to adjust
+  if (window.visualViewport) {
+    const diff = window.innerHeight - window.visualViewport.height;
+    if (diff > 100) {
+      // Keyboard is open — no extra safe area needed, keyboard pushes content
+      document.documentElement.style.setProperty('--safe-bottom', '0px');
+    } else {
+      // Keyboard closed — apply safe area from CSS env()
+      document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom, 0px)');
+    }
+  }
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', applySafeArea);
+  window.visualViewport.addEventListener('scroll', applySafeArea);
+}
+applySafeArea();
+
+// Ensure input stays in view when focused on mobile
+msgInput.addEventListener('focus', () => {
+  // Small delay to let keyboard open
+  setTimeout(() => msgInput.scrollIntoView({block: 'center', behavior: 'smooth'}), 300);
+});
+
+// ─── Status ────────────────────────────────────────────────
+async function updateStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    modelInfo.textContent = `${data.model || '?'} · ${data.provider || '?'}`;
+  } catch(e) {}
+}
+
+// ─── Settings ──────────────────────────────────────────────
+// All settings sections and their builders
+const SETTINGS_SECTIONS = [
+  {id:'model', label:'Модель'},
+  {id:'agent', label:'Agent'},
+  {id:'terminal', label:'Термінал'},
+  {id:'toolsets', label:'Toolsets'},
+  {id:'display', label:'Display'},
+  {id:'tts', label:'TTS/STT'},
+  {id:'memory', label:'Пам\'ять'},
+  {id:'delegation', label:'Делегація'},
+  {id:'security', label:'Безпека'},
+  {id:'compression', label:'Compress'},
+  {id:'auxiliary', label:'Auxiliary'},
+  {id:'gateway', label:'Gateway'},
+  {id:'cron', label:'Крони'},
+  {id:'logging', label:'Логування'},
+  {id:'profiles', label:'Профілі'},
+  {id:'env', label:'API ключі'},
+];
+
+function deepGet(obj, path, def=null) {
+  const keys = path.split('.');
+  let val = obj;
+  for (const k of keys) {
+    if (val && typeof val === 'object') val = val[k];
+    else return def;
+  }
+  return val !== undefined && val !== null ? val : def;
+}
+
+function buildSettingsUI() {
+  // Tabs
+  settingsTabs.innerHTML = SETTINGS_SECTIONS.map((s, i) => 
+    `<div class="settings-tab ${i===0?'active':''}" onclick="switchSettingsTab('${s.id}', this)">${s.label}</div>`
+  ).join('');
+  
+  // Build each section
+  settingsBody.innerHTML = SETTINGS_SECTIONS.map(s => 
+    `<div class="settings-section ${s.id==='model'?'active':''}" id="sec-${s.id}"></div>`
+  ).join('');
+  
+  buildModelSection();
+  buildAgentSection();
+  buildTerminalSection();
+  buildToolsetsSection();
+  buildDisplaySection();
+  buildTTSSection();
+  buildMemorySection();
+  buildDelegationSection();
+  buildSecuritySection();
+  buildCompressionSection();
+  buildAuxiliarySection();
+  buildGatewaySection();
+  buildCronSection();
+  buildLoggingSection();
+  buildProfilesSection();
+  buildEnvSection();
+}
+
+function switchSettingsTab(id, el) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sec-' + id).classList.add('active');
+}
+
+// ─── Section Builders ──────────────────────────────────────
+
+function buildModelSection() {
+  const sec = document.getElementById('sec-model');
+  fetch('/api/providers').then(r=>r.json()).then(providers => {
+    const prov = deepGet(currentConfig, 'model.provider', 'deepseek');
+    const model = deepGet(currentConfig, 'model.default', 'deepseek-chat');
+    const url = deepGet(currentConfig, 'model.base_url', '');
+    const ctx = deepGet(currentConfig, 'model.context_length', 128000);
+    
+    const provOpts = Object.keys(providers).map(p => `<option value="${p}" ${p===prov?'selected':''}>${p}</option>`).join('');
+    const modelOpts = (providers[prov] || ['auto']).map(m => `<option value="${m}" ${m===model?'selected':''}>${m}</option>`).join('');
+    
+    sec.innerHTML = `
+      <h3>Модель та провайдер</h3>
+      <div class="form-group">
+        <label>Провайдер</label>
+        <select id="cfg-model-provider" onchange="updateModelList(this.value)">${provOpts}</select>
+      </div>
+      <div class="form-group">
+        <label>Модель</label>
+        <select id="cfg-model-default">${modelOpts}</select>
+      </div>
+      <div class="form-group">
+        <label>Base URL</label>
+        <input type="text" id="cfg-model-base_url" value="${url}" placeholder="https://api.example.com">
+      </div>
+      <div class="form-group">
+        <label>Context Length</label>
+        <input type="number" id="cfg-model-context_length" value="${ctx}">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="saveConfigField('model', 'provider', document.getElementById('cfg-model-provider').value)">💾 Зберегти</button>
+      </div>
+    `;
+  });
+}
+
+function updateModelList(provider) {
+  fetch('/api/providers').then(r=>r.json()).then(providers => {
+    const models = providers[provider] || ['auto'];
+    const sel = document.getElementById('cfg-model-default');
+    sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+  });
+}
+
+function buildAgentSection() {
+  const sec = document.getElementById('sec-agent');
+  const maxTurns = deepGet(currentConfig, 'agent.max_turns', 150);
+  const te = deepGet(currentConfig, 'agent.tool_use_enforcement', 'auto');
+  const re = deepGet(currentConfig, 'agent.reasoning_effort', 'medium');
+  const im = deepGet(currentConfig, 'agent.image_input_mode', 'auto');
+  const vb = deepGet(currentConfig, 'agent.verbose', false);
+  const tc = deepGet(currentConfig, 'agent.task_completion_guidance', true);
+  const gt = deepGet(currentConfig, 'agent.gateway_timeout', 1800);
+  
+  sec.innerHTML = `
+    <h3>Agent</h3>
+    <div class="form-group"><label>Max Turns</label><input type="number" id="cfg-agent-max_turns" value="${maxTurns}"></div>
+    <div class="form-group">
+      <label>Tool Use Enforcement</label>
+      <select id="cfg-agent-tool_use_enforcement">
+        ${['auto','manual','off'].map(o => `<option value="${o}" ${o===te?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Reasoning Effort</label>
+      <select id="cfg-agent-reasoning_effort">
+        ${['none','low','medium','high'].map(o => `<option value="${o}" ${o===re?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Image Input Mode</label>
+      <select id="cfg-agent-image_input_mode">
+        ${['auto','always','never'].map(o => `<option value="${o}" ${o===im?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="switch">
+        <input type="checkbox" id="cfg-agent-verbose" ${vb?'checked':''}><span class="slider"></span>
+        <span class="label-text">Verbose</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="switch">
+        <input type="checkbox" id="cfg-agent-task_completion_guidance" ${tc?'checked':''}><span class="slider"></span>
+        <span class="label-text">Task Completion Guidance</span>
+      </label>
+    </div>
+    <div class="form-group"><label>Gateway Timeout (сек)</label><input type="number" id="cfg-agent-gateway_timeout" value="${gt}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveAgentConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildTerminalSection() {
+  const sec = document.getElementById('sec-terminal');
+  const be = deepGet(currentConfig, 'terminal.backend', 'local');
+  const cwd = deepGet(currentConfig, 'terminal.cwd', '.');
+  const to = deepGet(currentConfig, 'terminal.timeout', 180);
+  const ps = deepGet(currentConfig, 'terminal.persistent_shell', true);
+  const src = deepGet(currentConfig, 'terminal.auto_source_bashrc', true);
+  const di = deepGet(currentConfig, 'terminal.docker_image', '');
+  
+  sec.innerHTML = `
+    <h3>Термінал</h3>
+    <div class="form-group">
+      <label>Backend</label>
+      <select id="cfg-terminal-backend">
+        ${['local','docker','ssh','modal'].map(o => `<option value="${o}" ${o===be?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>CWD</label><input type="text" id="cfg-terminal-cwd" value="${cwd}"></div>
+    <div class="form-group"><label>Timeout (сек)</label><input type="number" id="cfg-terminal-timeout" value="${to}"></div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-terminal-persistent_shell" ${ps?'checked':''}><span class="slider"></span><span class="label-text">Persistent Shell</span></label>
+    </div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-terminal-auto_source_bashrc" ${src?'checked':''}><span class="slider"></span><span class="label-text">Auto Source .bashrc</span></label>
+    </div>
+    <div class="form-group"><label>Docker Image</label><input type="text" id="cfg-terminal-docker_image" value="${di}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveTerminalConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildToolsetsSection() {
+  const sec = document.getElementById('sec-toolsets');
+  fetch('/api/toolsets').then(r=>r.json()).then(tools => {
+    const disabled = deepGet(currentConfig, 'agent.disabled_toolsets', []);
+    sec.innerHTML = `
+      <h3>Toolsets</h3>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Вимкніть непотрібні тулсети. Зміни застосуються після /reset</p>
+      <div class="grid-2">
+      ${tools.map(t => `
+        <div class="form-group">
+          <label class="switch">
+            <input type="checkbox" id="tool-${t}" ${!disabled.includes(t)?'checked':''}><span class="slider"></span>
+            <span class="label-text">${t}</span>
+          </label>
+        </div>
+      `).join('')}
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="saveToolsetsConfig()">💾 Зберегти</button>
+      </div>
+    `;
+  });
+}
+
+function buildDisplaySection() {
+  const sec = document.getElementById('sec-display');
+  const skin = deepGet(currentConfig, 'display.skin', 'default');
+  const lang = deepGet(currentConfig, 'display.language', 'en');
+  const strm = deepGet(currentConfig, 'display.streaming', true);
+  const sr = deepGet(currentConfig, 'display.show_reasoning', false);
+  const sc = deepGet(currentConfig, 'display.show_cost', false);
+  const ts = deepGet(currentConfig, 'display.timestamps', false);
+  const cp = deepGet(currentConfig, 'display.compact', false);
+  const tp = deepGet(currentConfig, 'display.tool_progress', 'all');
+  
+  fetch('/api/skins').then(r=>r.json()).then(skins => {
+    sec.innerHTML = `
+      <h3>Display</h3>
+      <div class="form-group">
+        <label>Skin</label>
+        <select id="cfg-display-skin">
+          ${skins.map(s => `<option value="${s}" ${s===skin?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>Мова</label>
+        <select id="cfg-display-language">
+          ${['en','uk','ru','de','fr','es','zh','ja'].map(l => `<option value="${l}" ${l===lang?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="switch"><input type="checkbox" id="cfg-display-streaming" ${strm?'checked':''}><span class="slider"></span><span class="label-text">Streaming</span></label>
+      </div>
+      <div class="form-group">
+        <label class="switch"><input type="checkbox" id="cfg-display-show_reasoning" ${sr?'checked':''}><span class="slider"></span><span class="label-text">Show Reasoning</span></label>
+      </div>
+      <div class="form-group">
+        <label class="switch"><input type="checkbox" id="cfg-display-show_cost" ${sc?'checked':''}><span class="slider"></span><span class="label-text">Show Cost</span></label>
+      </div>
+      <div class="form-group">
+        <label class="switch"><input type="checkbox" id="cfg-display-timestamps" ${ts?'checked':''}><span class="slider"></span><span class="label-text">Timestamps</span></label>
+      </div>
+      <div class="form-group">
+        <label class="switch"><input type="checkbox" id="cfg-display-compact" ${cp?'checked':''}><span class="slider"></span><span class="label-text">Compact Mode</span></label>
+      </div>
+      <div class="form-group">
+        <label>Tool Progress</label>
+        <select id="cfg-display-tool_progress">
+          ${['all','new','off','none'].map(o => `<option value="${o}" ${o===tp?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="saveDisplayConfig()">💾 Зберегти</button>
+      </div>
+    `;
+  });
+}
+
+function buildTTSSection() {
+  const sec = document.getElementById('sec-tts');
+  const ttsProv = deepGet(currentConfig, 'tts.provider', 'edge');
+  const sttEn = deepGet(currentConfig, 'stt.enabled', true);
+  const sttProv = deepGet(currentConfig, 'stt.provider', 'local');
+  const sttModel = deepGet(currentConfig, 'stt.local.model', 'base');
+  const autoTTS = deepGet(currentConfig, 'voice.auto_tts', false);
+  const edgeVoice = deepGet(currentConfig, 'tts.edge.voice', 'en-US-AriaNeural');
+  
+  sec.innerHTML = `
+    <h3>TTS (текст → мова)</h3>
+    <div class="form-group">
+      <label>TTS Provider</label>
+      <select id="cfg-tts-provider">
+        ${['edge','elevenlabs','openai','minimax','mistral','neutts','piper'].map(p => `<option value="${p}" ${p===ttsProv?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Edge Voice</label><input type="text" id="cfg-tts-edge-voice" value="${edgeVoice}"></div>
+    <hr style="border-color:#333;margin:12px 0">
+    <h3>STT (мова → текст)</h3>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-stt-enabled" ${sttEn?'checked':''}><span class="slider"></span><span class="label-text">STT Увімкнено</span></label>
+    </div>
+    <div class="form-group">
+      <label>STT Provider</label>
+      <select id="cfg-stt-provider">
+        ${['local','groq','openai','mistral','elevenlabs'].map(p => `<option value="${p}" ${p===sttProv?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Whisper Model</label>
+      <select id="cfg-stt-local-model">
+        ${['tiny','base','small','medium','large-v3'].map(m => `<option value="${m}" ${m===sttModel?'selected':''}>${m}</option>`).join('')}
+      </select>
+    </div>
+    <hr style="border-color:#333;margin:12px 0">
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-voice-auto_tts" ${autoTTS?'checked':''}><span class="slider"></span><span class="label-text">Auto TTS</span></label>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveTTSConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildMemorySection() {
+  const sec = document.getElementById('sec-memory');
+  const men = deepGet(currentConfig, 'memory.memory_enabled', true);
+  const upe = deepGet(currentConfig, 'memory.user_profile_enabled', true);
+  const mcl = deepGet(currentConfig, 'memory.memory_char_limit', 2200);
+  const ucl = deepGet(currentConfig, 'memory.user_char_limit', 1375);
+  const ni = deepGet(currentConfig, 'memory.nudge_interval', 10);
+  
+  sec.innerHTML = `
+    <h3>Пам'ять</h3>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-memory-memory_enabled" ${men?'checked':''}><span class="slider"></span><span class="label-text">Memory Увімкнено</span></label>
+    </div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-memory-user_profile_enabled" ${upe?'checked':''}><span class="slider"></span><span class="label-text">User Profile Увімкнено</span></label>
+    </div>
+    <div class="form-group"><label>Memory Char Limit</label><input type="number" id="cfg-memory-memory_char_limit" value="${mcl}"></div>
+    <div class="form-group"><label>User Char Limit</label><input type="number" id="cfg-memory-user_char_limit" value="${ucl}"></div>
+    <div class="form-group"><label>Nudge Interval</label><input type="number" id="cfg-memory-nudge_interval" value="${ni}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveMemoryConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildDelegationSection() {
+  const sec = document.getElementById('sec-delegation');
+  const mi = deepGet(currentConfig, 'delegation.max_iterations', 50);
+  const ct = deepGet(currentConfig, 'delegation.child_timeout_seconds', 600);
+  const mcc = deepGet(currentConfig, 'delegation.max_concurrent_children', 3);
+  const msd = deepGet(currentConfig, 'delegation.max_spawn_depth', 1);
+  const aa = deepGet(currentConfig, 'delegation.subagent_auto_approve', false);
+  
+  sec.innerHTML = `
+    <h3>Делегація (підагенти)</h3>
+    <div class="form-group"><label>Max Iterations</label><input type="number" id="cfg-delegation-max_iterations" value="${mi}"></div>
+    <div class="form-group"><label>Child Timeout (сек)</label><input type="number" id="cfg-delegation-child_timeout_seconds" value="${ct}"></div>
+    <div class="form-group"><label>Max Concurrent Children</label><input type="number" id="cfg-delegation-max_concurrent_children" value="${mcc}"></div>
+    <div class="form-group"><label>Max Spawn Depth</label><input type="number" id="cfg-delegation-max_spawn_depth" value="${msd}"></div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-delegation-subagent_auto_approve" ${aa?'checked':''}><span class="slider"></span><span class="label-text">Subagent Auto Approve</span></label>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveDelegationConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildSecuritySection() {
+  const sec = document.getElementById('sec-security');
+  const rs = deepGet(currentConfig, 'security.redact_secrets', true);
+  const te = deepGet(currentConfig, 'security.tirith_enabled', true);
+  const am = deepGet(currentConfig, 'approvals.mode', 'manual');
+  const at = deepGet(currentConfig, 'approvals.timeout', 60);
+  const ali = deepGet(currentConfig, 'security.allow_lazy_installs', true);
+  
+  sec.innerHTML = `
+    <h3>Безпека</h3>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-security-redact_secrets" ${rs?'checked':''}><span class="slider"></span><span class="label-text">Redact Secrets</span></label>
+    </div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-security-tirith_enabled" ${te?'checked':''}><span class="slider"></span><span class="label-text">Tirith (політика безпеки)</span></label>
+    </div>
+    <div class="form-group">
+      <label>Approvals Mode</label>
+      <select id="cfg-approvals-mode">
+        ${['manual','smart','off'].map(o => `<option value="${o}" ${o===am?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Approval Timeout (сек)</label><input type="number" id="cfg-approvals-timeout" value="${at}"></div>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-security-allow_lazy_installs" ${ali?'checked':''}><span class="slider"></span><span class="label-text">Allow Lazy Installs</span></label>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveSecurityConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildCompressionSection() {
+  const sec = document.getElementById('sec-compression');
+  const ce = deepGet(currentConfig, 'compression.enabled', true);
+  const ct = deepGet(currentConfig, 'compression.threshold', 0.5);
+  const cr = deepGet(currentConfig, 'compression.target_ratio', 0.2);
+  const pln = deepGet(currentConfig, 'compression.protect_last_n', 20);
+  
+  sec.innerHTML = `
+    <h3>Компресія контексту</h3>
+    <div class="form-group">
+      <label class="switch"><input type="checkbox" id="cfg-compression-enabled" ${ce?'checked':''}><span class="slider"></span><span class="label-text">Увімкнено</span></label>
+    </div>
+    <div class="form-group"><label>Threshold</label><input type="number" step="0.1" id="cfg-compression-threshold" value="${ct}"></div>
+    <div class="form-group"><label>Target Ratio</label><input type="number" step="0.1" id="cfg-compression-target_ratio" value="${cr}"></div>
+    <div class="form-group"><label>Protect Last N</label><input type="number" id="cfg-compression-protect_last_n" value="${pln}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveCompressionConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildAuxiliarySection() {
+  const sec = document.getElementById('sec-auxiliary');
+  const auxItems = ['vision','web_extract','compression','skills_hub','approval','mcp','title_generation','curator'];
+  
+  let html = '<h3>Auxiliary (допоміжні моделі)</h3><p style="color:var(--text2);font-size:13px;margin-bottom:8px">Для кожної задачі окрема модель/провайдер</p>';
+  
+  for (const item of auxItems) {
+    const prov = deepGet(currentConfig, `auxiliary.${item}.provider`, 'auto');
+    const model = deepGet(currentConfig, `auxiliary.${item}.model`, '');
+    const to = deepGet(currentConfig, `auxiliary.${item}.timeout`, 30);
+    
+    html += `
+      <div style="border:1px solid #333;border-radius:8px;padding:8px;margin-bottom:8px">
+        <strong style="color:var(--accent);font-size:13px">${item}</strong>
+        <div class="form-group" style="margin:4px 0">
+          <select id="aux-${item}-provider" style="width:48%;display:inline-block">
+            ${['auto','openrouter','anthropic','openai','deepseek','google'].map(p => `<option value="${p}" ${p===prov?'selected':''}>${p}</option>`).join('')}
+          </select>
+          <input type="text" id="aux-${item}-model" value="${model}" placeholder="модель" style="width:48%;display:inline-block;margin-left:2%">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:12px">Timeout: <input type="number" id="aux-${item}-timeout" value="${to}" style="width:60px;display:inline"></label>
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `<div class="btn-group"><button class="btn btn-primary btn-sm" onclick="saveAuxiliaryConfig()">💾 Зберегти</button></div>`;
+  sec.innerHTML = html;
+}
+
+function buildGatewaySection() {
+  const sec = document.getElementById('sec-gateway');
+  const tr = deepGet(currentConfig, 'telegram.reactions', false);
+  const drm = deepGet(currentConfig, 'discord.require_mention', true);
+  const dat = deepGet(currentConfig, 'discord.auto_thread', true);
+  const dr = deepGet(currentConfig, 'discord.reactions', true);
+  const srm = deepGet(currentConfig, 'slack.require_mention', true);
+  const pp = deepGet(currentConfig, 'privacy.redact_pii', false);
+  
+  sec.innerHTML = `
+    <h3>Gateway (платформи)</h3>
+    <h3>Telegram</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-telegram-reactions" ${tr?'checked':''}><span class="slider"></span><span class="label-text">Reactions</span></label></div>
+    <h3>Discord</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-discord-require_mention" ${drm?'checked':''}><span class="slider"></span><span class="label-text">Require Mention</span></label></div>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-discord-auto_thread" ${dat?'checked':''}><span class="slider"></span><span class="label-text">Auto Thread</span></label></div>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-discord-reactions" ${dr?'checked':''}><span class="slider"></span><span class="label-text">Reactions</span></label></div>
+    <h3>Slack</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-slack-require_mention" ${srm?'checked':''}><span class="slider"></span><span class="label-text">Require Mention</span></label></div>
+    <hr style="border-color:#333;margin:12px 0">
+    <h3>Privacy</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-privacy-redact_pii" ${pp?'checked':''}><span class="slider"></span><span class="label-text">Redact PII</span></label></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveGatewayConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildCronSection() {
+  const sec = document.getElementById('sec-cron');
+  const wr = deepGet(currentConfig, 'cron.wrap_response', true);
+  const fl = deepGet(currentConfig, 'kanban.failure_limit', 2);
+  const di = deepGet(currentConfig, 'kanban.dispatch_in_gateway', true);
+  const dis = deepGet(currentConfig, 'kanban.dispatch_interval_seconds', 60);
+  
+  sec.innerHTML = `
+    <h3>Cron та Kanban</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-cron-wrap_response" ${wr?'checked':''}><span class="slider"></span><span class="label-text">Wrap Response</span></label></div>
+    <hr style="border-color:#333;margin:12px 0">
+    <h3>Kanban</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-kanban-dispatch_in_gateway" ${di?'checked':''}><span class="slider"></span><span class="label-text">Dispatch in Gateway</span></label></div>
+    <div class="form-group"><label>Dispatch Interval (сек)</label><input type="number" id="cfg-kanban-dispatch_interval_seconds" value="${dis}"></div>
+    <div class="form-group"><label>Failure Limit</label><input type="number" id="cfg-kanban-failure_limit" value="${fl}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveCronConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildLoggingSection() {
+  const sec = document.getElementById('sec-logging');
+  const ll = deepGet(currentConfig, 'logging.level', 'INFO');
+  const ms = deepGet(currentConfig, 'logging.max_size_mb', 5);
+  const bc = deepGet(currentConfig, 'logging.backup_count', 3);
+  const ar = deepGet(currentConfig, 'sessions.auto_prune', false);
+  const rd = deepGet(currentConfig, 'sessions.retention_days', 90);
+  
+  sec.innerHTML = `
+    <h3>Логування</h3>
+    <div class="form-group">
+      <label>Log Level</label>
+      <select id="cfg-logging-level">
+        ${['DEBUG','INFO','WARNING','ERROR'].map(l => `<option value="${l}" ${l===ll?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Max Size (MB)</label><input type="number" id="cfg-logging-max_size_mb" value="${ms}"></div>
+    <div class="form-group"><label>Backup Count</label><input type="number" id="cfg-logging-backup_count" value="${bc}"></div>
+    <hr style="border-color:#333;margin:12px 0">
+    <h3>Сесії</h3>
+    <div class="form-group"><label class="switch"><input type="checkbox" id="cfg-sessions-auto_prune" ${ar?'checked':''}><span class="slider"></span><span class="label-text">Auto Prune</span></label></div>
+    <div class="form-group"><label>Retention Days</label><input type="number" id="cfg-sessions-retention_days" value="${rd}"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveLoggingConfig()">💾 Зберегти</button>
+    </div>
+  `;
+}
+
+function buildProfilesSection() {
+  const sec = document.getElementById('sec-profiles');
+  fetch('/api/profiles').then(r=>r.json()).then(profs => {
+    sec.innerHTML = `
+      <h3>Профілі</h3>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Профілі дозволяють мати ізольовані конфігурації Hermes</p>
+      <div class="form-group"><label>Поточні профілі:</label>
+        <select id="profileSelect">${profs.map(p => `<option value="${p}">${p}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Назва нового профілю</label><input type="text" id="newProfileName" placeholder="my-profile"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="createProfile()">➕ Створити</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProfile()">🗑 Видалити</button>
+      </div>
+    `;
+  });
+}
+
+function buildEnvSection() {
+  const sec = document.getElementById('sec-env');
+  fetch('/api/env/keys').then(r=>r.json()).then(keys => {
+    let html = '<h3>API ключі (.env)</h3><p style="color:var(--text2);font-size:13px;margin-bottom:8px">Ключі для всіх провайдерів</p>';
+    
+    for (const {key, label} of keys) {
+      const val = currentEnv[key] || '';
+      html += `
+        <div class="form-group">
+          <label>${label}</label>
+          <input type="text" id="env-${key}" value="${val}" placeholder="${key}" style="font-family:monospace;font-size:12px">
+        </div>
+      `;
+    }
+    
+    html += `<div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="saveEnvConfig()">💾 Зберегти API ключі</button>
+    </div>`;
+    
+    sec.innerHTML = html;
+  });
+}
+
+// ─── Save Helpers ──────────────────────────────────────────
+
+function saveConfigField(section, key, value) {
+  currentConfig[section] = currentConfig[section] || {};
+  currentConfig[section][key] = value;
+  saveFullConfig();
+}
+
+function saveFullConfig() {
+  fetch('/api/config', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(currentConfig)
+  }).then(r=>r.json()).then(data => {
+    showToast(data.status || '✅ Збережено');
+  }).catch(e => showToast('❌ Помилка: '+e.message, true));
+}
+
+function saveAgentConfig() {
+  setNested(currentConfig, 'agent.max_turns', parseInt(document.getElementById('cfg-agent-max_turns').value));
+  setNested(currentConfig, 'agent.tool_use_enforcement', document.getElementById('cfg-agent-tool_use_enforcement').value);
+  setNested(currentConfig, 'agent.reasoning_effort', document.getElementById('cfg-agent-reasoning_effort').value);
+  setNested(currentConfig, 'agent.image_input_mode', document.getElementById('cfg-agent-image_input_mode').value);
+  setNested(currentConfig, 'agent.verbose', document.getElementById('cfg-agent-verbose').checked);
+  setNested(currentConfig, 'agent.task_completion_guidance', document.getElementById('cfg-agent-task_completion_guidance').checked);
+  setNested(currentConfig, 'agent.gateway_timeout', parseInt(document.getElementById('cfg-agent-gateway_timeout').value));
+  saveFullConfig();
+}
+
+function saveTerminalConfig() {
+  setNested(currentConfig, 'terminal.backend', document.getElementById('cfg-terminal-backend').value);
+  setNested(currentConfig, 'terminal.cwd', document.getElementById('cfg-terminal-cwd').value);
+  setNested(currentConfig, 'terminal.timeout', parseInt(document.getElementById('cfg-terminal-timeout').value));
+  setNested(currentConfig, 'terminal.persistent_shell', document.getElementById('cfg-terminal-persistent_shell').checked);
+  setNested(currentConfig, 'terminal.auto_source_bashrc', document.getElementById('cfg-terminal-auto_source_bashrc').checked);
+  setNested(currentConfig, 'terminal.docker_image', document.getElementById('cfg-terminal-docker_image').value);
+  saveFullConfig();
+}
+
+function saveToolsetsConfig() {
+  fetch('/api/toolsets').then(r=>r.json()).then(tools => {
+    const disabled = tools.filter(t => !document.getElementById('tool-'+t).checked);
+    setNested(currentConfig, 'agent.disabled_toolsets', disabled);
+    saveFullConfig();
+  });
+}
+
+function saveDisplayConfig() {
+  setNested(currentConfig, 'display.skin', document.getElementById('cfg-display-skin').value);
+  setNested(currentConfig, 'display.language', document.getElementById('cfg-display-language').value);
+  setNested(currentConfig, 'display.streaming', document.getElementById('cfg-display-streaming').checked);
+  setNested(currentConfig, 'display.show_reasoning', document.getElementById('cfg-display-show_reasoning').checked);
+  setNested(currentConfig, 'display.show_cost', document.getElementById('cfg-display-show_cost').checked);
+  setNested(currentConfig, 'display.timestamps', document.getElementById('cfg-display-timestamps').checked);
+  setNested(currentConfig, 'display.compact', document.getElementById('cfg-display-compact').checked);
+  setNested(currentConfig, 'display.tool_progress', document.getElementById('cfg-display-tool_progress').value);
+  saveFullConfig();
+}
+
+function saveTTSConfig() {
+  setNested(currentConfig, 'tts.provider', document.getElementById('cfg-tts-provider').value);
+  setNested(currentConfig, 'tts.edge.voice', document.getElementById('cfg-tts-edge-voice').value);
+  setNested(currentConfig, 'stt.enabled', document.getElementById('cfg-stt-enabled').checked);
+  setNested(currentConfig, 'stt.provider', document.getElementById('cfg-stt-provider').value);
+  setNested(currentConfig, 'stt.local.model', document.getElementById('cfg-stt-local-model').value);
+  setNested(currentConfig, 'voice.auto_tts', document.getElementById('cfg-voice-auto_tts').checked);
+  saveFullConfig();
+}
+
+function saveMemoryConfig() {
+  setNested(currentConfig, 'memory.memory_enabled', document.getElementById('cfg-memory-memory_enabled').checked);
+  setNested(currentConfig, 'memory.user_profile_enabled', document.getElementById('cfg-memory-user_profile_enabled').checked);
+  setNested(currentConfig, 'memory.memory_char_limit', parseInt(document.getElementById('cfg-memory-memory_char_limit').value));
+  setNested(currentConfig, 'memory.user_char_limit', parseInt(document.getElementById('cfg-memory-user_char_limit').value));
+  setNested(currentConfig, 'memory.nudge_interval', parseInt(document.getElementById('cfg-memory-nudge_interval').value));
+  saveFullConfig();
+}
+
+function saveDelegationConfig() {
+  setNested(currentConfig, 'delegation.max_iterations', parseInt(document.getElementById('cfg-delegation-max_iterations').value));
+  setNested(currentConfig, 'delegation.child_timeout_seconds', parseInt(document.getElementById('cfg-delegation-child_timeout_seconds').value));
+  setNested(currentConfig, 'delegation.max_concurrent_children', parseInt(document.getElementById('cfg-delegation-max_concurrent_children').value));
+  setNested(currentConfig, 'delegation.max_spawn_depth', parseInt(document.getElementById('cfg-delegation-max_spawn_depth').value));
+  setNested(currentConfig, 'delegation.subagent_auto_approve', document.getElementById('cfg-delegation-subagent_auto_approve').checked);
+  saveFullConfig();
+}
+
+function saveSecurityConfig() {
+  setNested(currentConfig, 'security.redact_secrets', document.getElementById('cfg-security-redact_secrets').checked);
+  setNested(currentConfig, 'security.tirith_enabled', document.getElementById('cfg-security-tirith_enabled').checked);
+  setNested(currentConfig, 'approvals.mode', document.getElementById('cfg-approvals-mode').value);
+  setNested(currentConfig, 'approvals.timeout', parseInt(document.getElementById('cfg-approvals-timeout').value));
+  setNested(currentConfig, 'security.allow_lazy_installs', document.getElementById('cfg-security-allow_lazy_installs').checked);
+  saveFullConfig();
+}
+
+function saveCompressionConfig() {
+  setNested(currentConfig, 'compression.enabled', document.getElementById('cfg-compression-enabled').checked);
+  setNested(currentConfig, 'compression.threshold', parseFloat(document.getElementById('cfg-compression-threshold').value));
+  setNested(currentConfig, 'compression.target_ratio', parseFloat(document.getElementById('cfg-compression-target_ratio').value));
+  setNested(currentConfig, 'compression.protect_last_n', parseInt(document.getElementById('cfg-compression-protect_last_n').value));
+  saveFullConfig();
+}
+
+function saveAuxiliaryConfig() {
+  const items = ['vision','web_extract','compression','skills_hub','approval','mcp','title_generation','curator'];
+  for (const item of items) {
+    const provEl = document.getElementById(`aux-${item}-provider`);
+    const modelEl = document.getElementById(`aux-${item}-model`);
+    const toEl = document.getElementById(`aux-${item}-timeout`);
+    if (provEl && modelEl && toEl) {
+      setNested(currentConfig, `auxiliary.${item}.provider`, provEl.value);
+      setNested(currentConfig, `auxiliary.${item}.model`, modelEl.value);
+      setNested(currentConfig, `auxiliary.${item}.timeout`, parseInt(toEl.value));
+    }
+  }
+  saveFullConfig();
+}
+
+function saveGatewayConfig() {
+  setNested(currentConfig, 'telegram.reactions', document.getElementById('cfg-telegram-reactions').checked);
+  setNested(currentConfig, 'discord.require_mention', document.getElementById('cfg-discord-require_mention').checked);
+  setNested(currentConfig, 'discord.auto_thread', document.getElementById('cfg-discord-auto_thread').checked);
+  setNested(currentConfig, 'discord.reactions', document.getElementById('cfg-discord-reactions').checked);
+  setNested(currentConfig, 'slack.require_mention', document.getElementById('cfg-slack-require_mention').checked);
+  setNested(currentConfig, 'privacy.redact_pii', document.getElementById('cfg-privacy-redact_pii').checked);
+  saveFullConfig();
+}
+
+function saveCronConfig() {
+  setNested(currentConfig, 'cron.wrap_response', document.getElementById('cfg-cron-wrap_response').checked);
+  setNested(currentConfig, 'kanban.dispatch_in_gateway', document.getElementById('cfg-kanban-dispatch_in_gateway').checked);
+  setNested(currentConfig, 'kanban.dispatch_interval_seconds', parseInt(document.getElementById('cfg-kanban-dispatch_interval_seconds').value));
+  setNested(currentConfig, 'kanban.failure_limit', parseInt(document.getElementById('cfg-kanban-failure_limit').value));
+  saveFullConfig();
+}
+
+function saveLoggingConfig() {
+  setNested(currentConfig, 'logging.level', document.getElementById('cfg-logging-level').value);
+  setNested(currentConfig, 'logging.max_size_mb', parseInt(document.getElementById('cfg-logging-max_size_mb').value));
+  setNested(currentConfig, 'logging.backup_count', parseInt(document.getElementById('cfg-logging-backup_count').value));
+  setNested(currentConfig, 'sessions.auto_prune', document.getElementById('cfg-sessions-auto_prune').checked);
+  setNested(currentConfig, 'sessions.retention_days', parseInt(document.getElementById('cfg-sessions-retention_days').value));
+  saveFullConfig();
+}
+
+function saveEnvConfig() {
+  fetch('/api/env/keys').then(r=>r.json()).then(keys => {
+    const env = {};
+    for (const {key} of keys) {
+      const val = document.getElementById('env-'+key).value.trim();
+      if (val) env[key] = val;
+    }
+    fetch('/api/env', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(env)
+    }).then(r=>r.json()).then(data => {
+      showToast(data.status || '✅ Збережено');
+      currentEnv = env;
+    });
+  });
+}
+
+function createProfile() {
+  const name = document.getElementById('newProfileName').value.trim();
+  if (!name) { showToast('❌ Введіть назву', true); return; }
+  fetch('/api/profiles', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name})
+  }).then(r=>r.json()).then(data => {
+    showToast(data.status || '✅ Створено');
+    buildProfilesSection();
+  });
+}
+
+function deleteProfile() {
+  const name = document.getElementById('profileSelect').value;
+  if (name === 'default') { showToast('❌ Не можна видалити default', true); return; }
+  fetch('/api/profiles/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name})
+  }).then(r=>r.json()).then(data => {
+    showToast(data.status || '✅ Видалено');
+    buildProfilesSection();
+  });
+}
+
+// ─── Helpers ───────────────────────────────────────────────
+function setNested(obj, path, value) {
+  const keys = path.split('.');
+  let d = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!d[keys[i]] || typeof d[keys[i]] !== 'object') d[keys[i]] = {};
+    d = d[keys[i]];
+  }
+  d[keys[keys.length - 1]] = value;
+}
+
+// ─── Load Settings ─────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const [cfgRes, envRes] = await Promise.all([
+      fetch('/api/config'),
+      fetch('/api/env')
+    ]);
+    currentConfig = await cfgRes.json();
+    currentEnv = await envRes.json();
+    buildSettingsUI();
+  } catch(e) {
+    showToast('❌ Помилка завантаження налаштувань: ' + e.message, true);
+  }
+}
+
+// ─── Init ──────────────────────────────────────────────────
+addMessage('assistant', 
+  '👋 Привіт! Я **Hermonoid** — графічний інтерфейс для Hermes Agent.\n\n'
+  + '**Можливості:**\n'
+  + '• 💬 Спілкуватися з Hermes\n'
+  + '• 📎 Надсилати файли\n'
+  + '• 📷 Фотографувати\n'
+  + '• ⚙️ Змінювати **всі** налаштування Hermes\n\n'
+  + 'Напиши щось або натисни ⚙️ щоб змінити конфігурацію!'
+);
+
+// Initial status
+updateStatus();
+
+function formatSessionDate(ts) {
+  if (!ts) return '';
+  const n = Number(ts);
+  if (!isNaN(n) && n > 1000000000) {
+    const d = new Date(n * 1000);
+    const now = new Date();
+    const diff = (now - d) / 1000;
+    if (diff < 60) return 'щойно';
+    if (diff < 3600) return Math.floor(diff/60) + 'м тому';
+    if (diff < 86400) return Math.floor(diff/3600) + 'год тому';
+    if (diff < 604800) return Math.floor(diff/86400) + 'д тому';
+    return d.toLocaleDateString('uk-UA', {day:'numeric',month:'short',year:'numeric'});
+  }
+  return ts;
+}
+
+</script>
+</body>
+</html>
